@@ -51,7 +51,6 @@ export function ChatArea({ messages, isLoading, onSend }: ChatAreaProps) {
               '🔬 I want to master quantum mechanics from scratch',
               '🧠 Help me deeply understand how neural networks learn',
               '⚖️ I need to master contract law for my bar exam',
-              '🎵 Teach me music theory, I\'m a complete beginner',
             ].map((example) => (
               <button
                 key={example}
