@@ -5,6 +5,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import masteryRoutes from './routes/mastery.routes';
 import sessionRoutes from './routes/session.routes';
+import { SessionService } from './services/session.service';
 
 dotenv.config();
 
@@ -29,8 +30,26 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
+// Clean up sessions older than 7 days every hour
+const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+const sessionService = new SessionService();
+
+function scheduleCleanup() {
+  setInterval(async () => {
+    try {
+      const deleted = await sessionService.deleteOldData(7);
+      if (deleted > 0) {
+        console.log(`Cleanup: deleted ${deleted} sessions older than 7 days`);
+      }
+    } catch (err) {
+      console.error('Cleanup failed:', err);
+    }
+  }, CLEANUP_INTERVAL_MS);
+}
+
 app.listen(PORT, () => {
   console.log(`UMA backend running on port ${PORT}`);
+  scheduleCleanup();
 });
 
 export default app;
