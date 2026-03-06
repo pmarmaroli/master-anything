@@ -1,0 +1,56 @@
+import { Router, Request, Response } from 'express';
+import { z } from 'zod';
+import { OrchestratorService } from '../services/orchestrator.service';
+
+const router = Router();
+const orchestrator = new OrchestratorService();
+
+const masteryRequestSchema = z.object({
+  message: z.string().min(1).max(10000),
+  sessionId: z.string().optional(),
+  threadId: z.string().optional(),
+  language: z.string().optional(),
+});
+
+router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
+  try {
+    const parsed = masteryRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Invalid request', details: parsed.error.issues });
+      return;
+    }
+
+    const { message, sessionId, threadId, language } = parsed.data;
+
+    // Set up SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const result = await orchestrator.processMessageStreaming(
+      message,
+      sessionId,
+      threadId,
+      language,
+      (token: string) => {
+        res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);
+      }
+    );
+
+    // Send final response with metadata
+    res.write(`data: ${JSON.stringify({ type: 'done', ...result })}\n\n`);
+    res.end();
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    // If headers already sent (SSE started), send error as event
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`);
+      res.end();
+    } else {
+      res.status(500).json({ error: errorMessage });
+    }
+  }
+});
+
+export default router;
