@@ -1,16 +1,70 @@
-import { useState, useRef, useCallback, type KeyboardEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
   disabled: boolean;
+  listeningMode?: boolean;
+  language?: string | null;
 }
 
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-export function MessageInput({ onSend, disabled }: MessageInputProps) {
+export function MessageInput({ onSend, disabled, listeningMode, language }: MessageInputProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // In listening mode, auto-start mic when assistant finishes speaking
+  useEffect(() => {
+    if (!listeningMode || !SpeechRecognition) return;
+    const handler = () => {
+      // Small delay to avoid picking up speaker audio
+      setTimeout(() => {
+        if (!recognitionRef.current) {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = false;
+          recognition.interimResults = true;
+          recognition.lang = language === 'fr' ? 'fr-FR' : language === 'en' ? 'en-US' : '';
+
+          recognition.onresult = (event: any) => {
+            const transcript = Array.from(event.results)
+              .map((r: any) => r[0].transcript)
+              .join('');
+            setInput(transcript);
+            // Auto-send when final result is received
+            if (event.results[event.results.length - 1].isFinal && transcript.trim()) {
+              onSend(transcript.trim());
+              setInput('');
+            }
+          };
+
+          recognition.onend = () => {
+            setIsListening(false);
+            recognitionRef.current = null;
+          };
+          recognition.onerror = () => {
+            setIsListening(false);
+            recognitionRef.current = null;
+          };
+
+          recognitionRef.current = recognition;
+          recognition.start();
+          setIsListening(true);
+        }
+      }, 500);
+    };
+    window.addEventListener('assistant-speech-ended', handler);
+    return () => window.removeEventListener('assistant-speech-ended', handler);
+  }, [listeningMode, onSend, language]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+  }, [input]);
 
   const handleSend = () => {
     const trimmed = input.trim();
@@ -38,7 +92,7 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = ''; // auto-detect
+    recognition.lang = language === 'fr' ? 'fr-FR' : language === 'en' ? 'en-US' : '';
 
     recognition.onresult = (event: any) => {
       const transcript = Array.from(event.results)
@@ -53,16 +107,17 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [isListening]);
+  }, [isListening, language]);
 
   return (
-    <div className="border-t border-amber-200/60 p-3 sm:p-4 bg-white/50 backdrop-blur-sm flex-shrink-0">
+    <div className="border-t border-amber-200/60 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white/50 backdrop-blur-sm flex-shrink-0">
       <div className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
         <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your answer here..."
+          placeholder={language === 'fr' ? 'Tapez votre reponse ici...' : 'Type your answer here...'}
           disabled={disabled}
           rows={1}
           className="flex-1 resize-none rounded-2xl border-2 border-amber-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 disabled:opacity-50 placeholder:text-amber-400"
@@ -84,9 +139,9 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
         <button
           onClick={handleSend}
           disabled={disabled || !input.trim()}
-          className="rounded-2xl bg-amber-500 px-5 py-3 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
+          className="rounded-2xl bg-amber-500 px-3 sm:px-5 py-3 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm whitespace-nowrap"
         >
-          Send
+          {language === 'fr' ? 'Envoyer' : 'Send'}
         </button>
       </div>
     </div>

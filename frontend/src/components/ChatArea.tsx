@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../types';
@@ -8,6 +8,55 @@ interface ChatAreaProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onSend?: (message: string) => void;
+  listeningMode?: boolean;
+  language?: string | null;
+  onLanguageChange?: (lang: string) => void;
+}
+
+function SpeakButton({ text, language }: { text: string; language?: string | null }) {
+  const [speaking, setSpeaking] = useState(false);
+
+  const toggle = useCallback(() => {
+    if (speaking) {
+      speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    // Strip markdown formatting for cleaner speech
+    const clean = text
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/[#>`\-*_]/g, '')
+      .trim();
+    if (!clean) return;
+
+    const utterance = new SpeechSynthesisUtterance(clean);
+    if (language === 'fr') utterance.lang = 'fr-FR';
+    else if (language === 'en') utterance.lang = 'en-US';
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  }, [text, speaking, language]);
+
+  useEffect(() => {
+    return () => { speechSynthesis.cancel(); };
+  }, []);
+
+  if (!('speechSynthesis' in window)) return null;
+
+  return (
+    <button
+      onClick={toggle}
+      className={`mt-2 text-xs flex items-center gap-1 transition-colors ${
+        speaking ? 'text-amber-600' : 'text-gray-400 hover:text-amber-500'
+      }`}
+      title={speaking ? 'Stop reading' : 'Read aloud'}
+    >
+      {speaking ? '⏹️ Stop' : '🔊 Listen'}
+    </button>
+  );
 }
 
 function extractQuickReplies(content: string): string[] {
@@ -22,12 +71,44 @@ function extractQuickReplies(content: string): string[] {
   return [];
 }
 
-export function ChatArea({ messages, isLoading, onSend }: ChatAreaProps) {
+const LANGUAGES = [
+  { code: 'fr', label: 'Francais', flag: '🇫🇷' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+];
+
+export function ChatArea({ messages, isLoading, onSend, listeningMode, language, onLanguageChange }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastSpokenRef = useRef<string>('');
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Auto-speak new assistant messages in listening mode
+  useEffect(() => {
+    if (!listeningMode || isLoading || messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.role !== 'assistant' || !last.content || last.content === lastSpokenRef.current) return;
+    lastSpokenRef.current = last.content;
+
+    const clean = last.content
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/[#>`\-*_]/g, '')
+      .trim();
+    if (!clean || !('speechSynthesis' in window)) return;
+
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    if (language === 'fr') utterance.lang = 'fr-FR';
+    else if (language === 'en') utterance.lang = 'en-US';
+    utterance.onend = () => {
+      // Dispatch custom event so MessageInput can auto-start mic
+      window.dispatchEvent(new CustomEvent('assistant-speech-ended'));
+    };
+    speechSynthesis.speak(utterance);
+  }, [listeningMode, isLoading, messages, language]);
 
   const lastMessage = messages[messages.length - 1];
   const lastAssistantContent = !isLoading && lastMessage?.role === 'assistant' ? lastMessage.content : '';
@@ -42,16 +123,39 @@ export function ChatArea({ messages, isLoading, onSend }: ChatAreaProps) {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center max-w-lg">
           <div className="text-5xl mb-4">🌟</div>
-          <h2 className="text-2xl font-bold text-amber-900 mb-3">What would you like to master?</h2>
-          <p className="text-amber-700/70 mb-8">
-            Pick a topic and I'll guide you through an interactive learning adventure.
+          <h2 className="text-2xl font-bold text-amber-900 mb-3">
+            {language === 'fr' ? 'Que voulez-vous apprendre ?' : 'What would you like to master?'}
+          </h2>
+          <p className="text-amber-700/70 mb-6">
+            {language === 'fr'
+              ? 'Choisissez un sujet et je vous guiderai dans une aventure d\'apprentissage interactive.'
+              : 'Pick a topic and I\'ll guide you through an interactive learning adventure.'}
           </p>
+          <div className="flex justify-center gap-3 mb-6">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => onLanguageChange?.(lang.code)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  language === lang.code
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white/80 border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300'
+                }`}
+              >
+                <span>{lang.flag}</span> {lang.label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 gap-3 text-left">
-            {[
+            {(language === 'fr' ? [
+              '🔬 Je veux comprendre la physique quantique depuis zero',
+              '🧠 Aide-moi a comprendre comment les reseaux de neurones apprennent',
+              '⚖️ Je dois maitriser le droit des contrats pour mon examen',
+            ] : [
               '🔬 I want to master quantum mechanics from scratch',
               '🧠 Help me deeply understand how neural networks learn',
               '⚖️ I need to master contract law for my bar exam',
-            ].map((example) => (
+            ]).map((example) => (
               <button
                 key={example}
                 onClick={() => onSend?.(example.replace(/^.\s/, ''))}
@@ -103,29 +207,32 @@ export function ChatArea({ messages, isLoading, onSend }: ChatAreaProps) {
                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.3s]" />
                 </div>
               ) : message.role === 'assistant' ? (
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code({ className, children }) {
-                      const text = String(children).trim();
-                      const isMermaidClass = /language-mermaid/.test(className || '');
-                      const isMermaidSyntax = /^(graph |flowchart |sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap)/m.test(text);
-                      if (isMermaidClass || isMermaidSyntax) {
-                        return <MermaidDiagram chart={text} />;
-                      }
-                      return (
-                        <code className={`${className} bg-amber-100 rounded px-1 py-0.5 text-sm`}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    pre({ children }) {
-                      return <div className="my-2">{children}</div>;
-                    },
-                  }}
-                >
-                  {message.content}
-                </ReactMarkdown>
+                <>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code({ className, children }) {
+                        const text = String(children).trim();
+                        const isMermaidClass = /language-mermaid/.test(className || '');
+                        const isMermaidSyntax = /^(graph |flowchart |sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap)/m.test(text);
+                        if (isMermaidClass || isMermaidSyntax) {
+                          return <MermaidDiagram chart={text} />;
+                        }
+                        return (
+                          <code className={`${className} bg-amber-100 rounded px-1 py-0.5 text-sm`}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      pre({ children }) {
+                        return <div className="my-2">{children}</div>;
+                      },
+                    }}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                  {!listeningMode && <SpeakButton text={message.content} language={language} />}
+                </>
               ) : (
                 <p>{message.content}</p>
               )}

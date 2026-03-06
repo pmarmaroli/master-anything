@@ -7,6 +7,8 @@ interface UseChatReturn {
   isLoading: boolean;
   sessionId: string | null;
   threadId: string | null;
+  language: string | null;
+  setLanguage: (lang: string) => void;
   sendMessage: (content: string) => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
 }
@@ -18,6 +20,8 @@ export function useChat(): UseChatReturn {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [threadId, setThreadId] = useState<string | null>(null);
   const messageIdCounter = useRef(0);
+
+  const [language, setLanguage] = useState<string | null>(null);
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: ChatMessage = {
@@ -50,6 +54,7 @@ export function useChat(): UseChatReturn {
           message: content,
           sessionId,
           threadId,
+          language: language || undefined,
         }),
       });
 
@@ -121,7 +126,7 @@ export function useChat(): UseChatReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, threadId]);
+  }, [sessionId, threadId, language]);
 
   const loadSession = useCallback(async (id: string) => {
     try {
@@ -144,5 +149,5 @@ export function useChat(): UseChatReturn {
     }
   }, []);
 
-  return { messages, progress, isLoading, sessionId, threadId, sendMessage, loadSession };
+  return { messages, progress, isLoading, sessionId, threadId, language, setLanguage, sendMessage, loadSession };
 }

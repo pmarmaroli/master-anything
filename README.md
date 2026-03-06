@@ -1,6 +1,6 @@
 # Master Anything
 
-An AI-powered learning platform that uses the **Feynman Method** to help you deeply understand any subject. Behind a unified chat interface, six specialized Azure AI agents collaborate to guide you through an interactive learning journey — from initial assessment to mastery validation.
+An AI-powered learning platform that helps you deeply master any subject by teaching it. Behind a unified chat interface, six specialized Azure AI agents collaborate to guide you through an interactive learning journey — from initial assessment to mastery validation — using the **Feynman Method** and **evidence-based pedagogy**.
 
 ## How It Works
 
