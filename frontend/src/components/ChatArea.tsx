@@ -59,13 +59,38 @@ function SpeakButton({ text, language }: { text: string; language?: string | nul
   );
 }
 
-function extractQuickReplies(content: string): string[] {
+function extractQuickReplies(content: string, language?: string | null): string[] {
   // Match A) B) C) D) or A. B. C. style options (with or without bold)
   const abcMatch = content.match(/(?:^|\n)\s*\**[A-Da-d1-4][)\.]\**\s*(.+)/g);
   if (abcMatch && abcMatch.length >= 2) {
     return abcMatch.map(m =>
       m.replace(/^\s*\**[A-Da-d1-4][)\.]\**\s*/, '').replace(/\*\*/g, '').trim()
     ).filter(Boolean);
+  }
+
+  // Detect question type from the last sentence ending with ?
+  const questions = content.match(/[^.!?\n]+\?/g);
+  if (!questions || questions.length === 0) return [];
+
+  const lastQuestion = questions[questions.length - 1].toLowerCase().trim();
+  const fr = language === 'fr';
+
+  // Yes/No detection patterns
+  const yesNoPatterns = fr
+    ? /\b(souhaites?-tu|veux-tu|voulez-vous|est-ce que|as-tu|avez-vous|aimerais-tu|aimeriez-vous|on (continue|passe|commence)|prêt[e]?\s*(à|\?)|d'accord|ça te va|ça vous va|tu veux|tu préfères)/i
+    : /\b(do you|would you|shall (i|we)|can (i|you)|should (i|we)|are you|is (it|that|this)|ready to|want (me|to)|did you)/i;
+
+  if (yesNoPatterns.test(lastQuestion)) {
+    return fr ? ['Oui', 'Non'] : ['Yes', 'No'];
+  }
+
+  // Open question detection — suggest "I don't know"
+  const openPatterns = fr
+    ? /\b(pourquoi|comment|qu'est-ce|selon toi|à ton avis|que penses-tu|d'après toi|explique|peux-tu expliquer|quelle est|quel est|quelles sont)/i
+    : /\b(why|how|what do you think|in your opinion|can you explain|what is|what are|according to you)/i;
+
+  if (openPatterns.test(lastQuestion)) {
+    return fr ? ['Je ne sais pas'] : ["I don't know"];
   }
 
   return [];
@@ -119,8 +144,8 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
 
   const quickReplies = useMemo(() => {
     if (!lastAssistantContent) return [];
-    return extractQuickReplies(lastAssistantContent);
-  }, [lastAssistantContent]);
+    return extractQuickReplies(lastAssistantContent, language);
+  }, [lastAssistantContent, language]);
 
   const noLang = !language;
 
@@ -223,6 +248,17 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                         const isMermaidSyntax = /^(graph |flowchart |sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|gitGraph|mindmap)/m.test(text);
                         if (isMermaidClass || isMermaidSyntax) {
                           return <MermaidDiagram chart={text} />;
+                        }
+                        // Render SVG code blocks as inline illustrations
+                        const isSvgClass = /language-svg/.test(className || '');
+                        const isSvgSyntax = /^<svg[\s>]/i.test(text);
+                        if (isSvgClass || isSvgSyntax) {
+                          return (
+                            <div
+                              className="my-4 flex justify-center overflow-x-auto"
+                              dangerouslySetInnerHTML={{ __html: text }}
+                            />
+                          );
                         }
                         return (
                           <code className={`${className} bg-amber-100 rounded px-1 py-0.5 text-sm`}>

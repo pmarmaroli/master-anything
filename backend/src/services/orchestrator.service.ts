@@ -81,8 +81,18 @@ export class OrchestratorService {
     prompt += `
 
 ABSOLUTE RULE FOR DIAGRAMS AND SCHEMAS:
-When asked to create any diagram, schema, chart, or visual representation, you MUST use mermaid syntax inside a mermaid code block (starting with triple backticks followed by "mermaid"). Examples of valid mermaid types: graph TD, flowchart LR, sequenceDiagram, timeline, mindmap, classDiagram.
-NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain text diagrams. The app renders mermaid code as interactive visual diagrams — ASCII art will look broken.`;
+You have TWO visual tools available. Choose the right one:
+
+1. MERMAID — for flowcharts, mind maps, timelines, sequences, class diagrams, org charts.
+   Use a mermaid code block (triple backticks followed by "mermaid").
+   Examples: graph TD, flowchart LR, sequenceDiagram, timeline, mindmap.
+
+2. SVG — for scientific illustrations, physics diagrams, wave patterns, circuits, geometry, anatomy, or anything that needs actual drawing (curves, shapes, colors, labels).
+   Use an svg code block (triple backticks followed by "svg") containing valid SVG markup.
+   Start with <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"> and include shapes, paths, text labels.
+   Use colors to distinguish elements. Keep it clear and educational.
+
+NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain text diagrams. The app renders both mermaid and SVG visually — ASCII art will look broken.`;
     return prompt;
   }
 
@@ -210,6 +220,16 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
   }
 
   private async handleArchitectResponse(session: SessionState, response: string): Promise<void> {
+    // Always try to extract concepts from any Architect response
+    if (session.topicMap.concepts.length === 0) {
+      const concepts = this.extractConcepts(response);
+      if (concepts.length > 0) {
+        console.log(`[Orchestrator] Extracted ${concepts.length} concepts at step ${session.currentStep}:`, concepts);
+        session.topicMap.concepts = concepts;
+        await this.sessionService.updateTopicMap(session.sessionId, session.topicMap);
+      }
+    }
+
     if (session.currentStep === 'A1') {
       await this.sessionService.updateSession(session.sessionId, { currentStep: 'A2' });
       session.currentStep = 'A2';
@@ -219,6 +239,7 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
     } else if (session.currentStep === 'A3') {
       // Try to extract concepts from the knowledge graph / topic map response
       const concepts = this.extractConcepts(response);
+      console.log(`[Orchestrator] A3 extracted ${concepts.length} concepts:`, concepts);
       if (concepts.length > 0) {
         session.topicMap.concepts = concepts;
         await this.sessionService.updateTopicMap(session.sessionId, session.topicMap);
@@ -246,6 +267,7 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
 
   private async handleEvaluatorResponse(session: SessionState, response: string): Promise<void> {
     const result = this.masteryService.parseEvaluatorResponse(response);
+    console.log(`[Orchestrator] Evaluator parse result:`, result ? `overall=${result.overall}, decision=${result.decision}` : 'FAILED TO PARSE');
 
     if (result) {
       const concept = session.topicMap.concepts[session.conceptIndex] || '';

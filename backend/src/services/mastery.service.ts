@@ -31,14 +31,32 @@ export class MasteryService {
   }
 
   parseEvaluatorResponse(response: string): EvaluatorResult | null {
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)```/);
-    if (!jsonMatch) return null;
-
-    try {
-      return JSON.parse(jsonMatch[1].trim()) as EvaluatorResult;
-    } catch {
-      return null;
+    // Try ```json ... ``` blocks first
+    const jsonCodeBlock = response.match(/```json\s*([\s\S]*?)```/);
+    if (jsonCodeBlock) {
+      try {
+        return JSON.parse(jsonCodeBlock[1].trim()) as EvaluatorResult;
+      } catch { /* fall through */ }
     }
+
+    // Try ``` ... ``` blocks (no json tag)
+    const codeBlock = response.match(/```\s*([\s\S]*?)```/);
+    if (codeBlock) {
+      try {
+        return JSON.parse(codeBlock[1].trim()) as EvaluatorResult;
+      } catch { /* fall through */ }
+    }
+
+    // Try raw JSON object { ... }
+    const rawJson = response.match(/\{[\s\S]*"scores"[\s\S]*"decision"[\s\S]*\}/);
+    if (rawJson) {
+      try {
+        return JSON.parse(rawJson[0]) as EvaluatorResult;
+      } catch { /* fall through */ }
+    }
+
+    console.warn('[MasteryService] Could not parse evaluator response:', response.slice(0, 200));
+    return null;
   }
 
   toConceptScore(result: EvaluatorResult, iterationCount: number): ConceptScore {

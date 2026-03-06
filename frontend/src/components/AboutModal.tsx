@@ -73,9 +73,15 @@ export function AboutModal({ show, onClose, language }: AboutModalProps) {
           </div>
 
           <p className="text-xs text-amber-600/70 text-center pt-1">
-            {fr
-              ? 'Propulse par Azure AI Foundry — Open source sur GitHub'
-              : 'Powered by Azure AI Foundry — Open source on GitHub'}
+            {fr ? 'Propulse par Azure AI Foundry — ' : 'Powered by Azure AI Foundry — '}
+            <a
+              href="https://github.com/pmarmaroli/master-anything"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-amber-800 transition-colors"
+            >
+              {fr ? 'Open source sur GitHub' : 'Open source on GitHub'}
+            </a>
           </p>
         </div>
       </div>
