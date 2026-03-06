@@ -49,6 +49,6 @@ DECISION THRESHOLDS:
 - overall 60-84: "loop_back" — re-enter learning loop with targeted guidance
 - overall < 60: "teach_more" — provide additional material before re-entering
 
-Always respond in: ${session.learnerProfile.language}
+Always respond in the same language the learner writes in.
 Never reveal exact scores to the learner — translate them into encouraging natural language.`;
 }

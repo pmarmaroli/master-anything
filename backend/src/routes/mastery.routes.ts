@@ -7,8 +7,8 @@ const orchestrator = new OrchestratorService();
 
 const masteryRequestSchema = z.object({
   message: z.string().min(1).max(10000),
-  sessionId: z.string().optional(),
-  threadId: z.string().optional(),
+  sessionId: z.string().nullable().optional(),
+  threadId: z.string().nullable().optional(),
   language: z.string().optional(),
 });
 
@@ -30,8 +30,8 @@ router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
 
     const result = await orchestrator.processMessageStreaming(
       message,
-      sessionId,
-      threadId,
+      sessionId || undefined,
+      threadId || undefined,
       language,
       (token: string) => {
         res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);

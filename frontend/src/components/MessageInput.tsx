@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
@@ -23,21 +23,21 @@ export function MessageInput({ onSend, disabled }: MessageInputProps) {
   };
 
   return (
-    <div className="border-t border-gray-200 p-4">
+    <div className="border-t border-amber-200/60 p-4 bg-white/50 backdrop-blur-sm">
       <div className="flex items-end gap-3 max-w-4xl mx-auto">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Explain what you'd like to learn..."
+          placeholder="Type your answer here..."
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+          className="flex-1 resize-none rounded-2xl border-2 border-amber-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 disabled:opacity-50 placeholder:text-amber-400"
         />
         <button
           onClick={handleSend}
           disabled={disabled || !input.trim()}
-          className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="rounded-2xl bg-amber-500 px-5 py-3 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
           Send
         </button>
