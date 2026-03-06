@@ -1,4 +1,4 @@
-import { LearningPhase } from '../types';
+import type { LearningPhase } from '../types';
 
 interface PhaseIndicatorProps {
   phase: LearningPhase;

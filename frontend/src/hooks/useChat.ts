@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { ChatMessage, MasteryProgress, SSEEvent, AgentRole } from '../types';
+import type { ChatMessage, MasteryProgress, SSEEvent, AgentRole } from '../types';
 
 interface UseChatReturn {
   messages: ChatMessage[];

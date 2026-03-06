@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MasteryProgress } from '../types';
+import type { MasteryProgress } from '../types';
 import { PhaseIndicator } from './PhaseIndicator';
 import { MasteryChart } from './MasteryChart';
 import { KnowledgeGraph } from './KnowledgeGraph';

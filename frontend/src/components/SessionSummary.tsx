@@ -1,4 +1,4 @@
-import { MasteryProgress } from '../types';
+import type { MasteryProgress } from '../types';
 
 interface SessionSummaryProps {
   progress: MasteryProgress;

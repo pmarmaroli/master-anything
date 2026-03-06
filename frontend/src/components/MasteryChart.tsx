@@ -1,5 +1,5 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { ConceptScore } from '../types';
+import type { ConceptScore } from '../types';
 
 interface MasteryChartProps {
   score: ConceptScore | null;

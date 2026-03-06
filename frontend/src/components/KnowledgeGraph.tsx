@@ -5,7 +5,7 @@ import {
   type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { KnowledgeGraphNode } from '../types';
+import type { KnowledgeGraphNode } from '../types';
 
 interface KnowledgeGraphProps {
   nodes: KnowledgeGraphNode[];
