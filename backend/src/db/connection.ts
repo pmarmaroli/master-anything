@@ -3,19 +3,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const config: sql.config = {
-  connectionString: process.env.AZURE_SQL_CONNECTION_STRING,
-  options: {
-    encrypt: true,
-    trustServerCertificate: false,
-  },
-};
-
 let pool: sql.ConnectionPool | null = null;
 
 export async function getPool(): Promise<sql.ConnectionPool> {
   if (!pool) {
-    pool = await sql.connect(config);
+    const connString = process.env.AZURE_SQL_CONNECTION_STRING;
+    if (!connString) {
+      throw new Error('AZURE_SQL_CONNECTION_STRING is not set');
+    }
+    pool = await sql.connect(connString);
   }
   return pool;
 }
