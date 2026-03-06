@@ -253,6 +253,25 @@ export class SessionService {
       );
   }
 
+  async deleteOldData(days: number = 7): Promise<number> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('days', days)
+      .query(
+        `DECLARE @cutoff DATETIME2 = DATEADD(day, -@days, GETUTCDATE());
+         DECLARE @old_sessions TABLE (session_id NVARCHAR(36));
+         INSERT INTO @old_sessions SELECT session_id FROM sessions WHERE created_at < @cutoff;
+         DELETE FROM conversation_history WHERE session_id IN (SELECT session_id FROM @old_sessions);
+         DELETE FROM spaced_repetition_queue WHERE session_id IN (SELECT session_id FROM @old_sessions);
+         DELETE FROM mastery_scores WHERE session_id IN (SELECT session_id FROM @old_sessions);
+         DELETE FROM topic_maps WHERE session_id IN (SELECT session_id FROM @old_sessions);
+         DELETE FROM learner_profiles WHERE session_id IN (SELECT session_id FROM @old_sessions);
+         DELETE FROM sessions WHERE session_id IN (SELECT session_id FROM @old_sessions);`
+      );
+    const deletedCount = result.rowsAffected[result.rowsAffected.length - 1];
+    return deletedCount;
+  }
+
   async getMessages(sessionId: string): Promise<ConversationMessage[]> {
     const pool = await getPool();
     const result = await pool.request()
