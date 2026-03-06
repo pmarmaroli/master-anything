@@ -1,3 +1,5 @@
+> **Status: Completed historical record.** This design document was written before implementation. The actual codebase may differ — see the [root README](../../README.md) for the current, authoritative documentation.
+
 # Universal Mastery Agent — Web Interface Design
 
 ## Overview
@@ -7,7 +9,7 @@ Web interface for the Universal Mastery Agent (UMA), a multi-agent AI learning s
 ## Decisions
 
 - **Architecture:** Monorepo with Express.js API + React SPA
-- **Frontend:** React 18 + Vite + TypeScript + Tailwind CSS
+- **Frontend:** React 19 + Vite 7 + TypeScript + Tailwind CSS 4
 - **Backend:** Express.js + TypeScript
 - **AI:** Azure AI Projects SDK — 6 separate agents (Orchestrator, Architect, Mentor, Challenger, Naive Student, Evaluator)
 - **Database:** Azure SQL Database
@@ -56,16 +58,14 @@ master-anything/
 │   │   │   ├── SessionSummary.tsx        # End-of-session mastery report
 │   │   │   └── MermaidDiagram.tsx        # Inline Mermaid renderer
 │   │   ├── hooks/
-│   │   │   ├── useChat.ts               # SSE connection, message state
-│   │   │   └── useSession.ts            # Session recovery, state sync
+│   │   │   └── useChat.ts               # SSE connection, message state, session recovery
 │   │   ├── pages/
 │   │   │   └── ChatPage.tsx             # Main layout: header + chat + sidebar
 │   │   ├── types/                       # Shared types
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── package.json
-│   ├── tailwind.config.js
-│   ├── vite.config.ts
+│   ├── vite.config.ts                 # Includes @tailwindcss/vite plugin (no standalone tailwind config)
 │   └── tsconfig.json
 ├── docs/
 │   └── plans/
@@ -160,11 +160,10 @@ Tables:
 - Simplification Ability: 25%
 - Connection Building: 20%
 
-Thresholds:
-- Novice (0-39%): Needs additional teaching
-- Developing (40-59%): Re-enter learning loop
-- Proficient (60-84%): One more iteration
-- Master (85-100%): Ready to advance
+Decision thresholds (as implemented):
+- overall >= 85%: `advance` — ready for next concept
+- overall 60-84%: `loop_back` — re-enter learning loop with targeted guidance
+- overall < 60%: `teach_more` — provide additional material before re-entering
 
 ### Spaced Repetition (SM-2)
 
@@ -211,11 +210,11 @@ Thresholds:
 1. User types message -> POST /api/universal-mastery-agent (SSE)
 2. Tokens stream into ChatArea in real-time
 3. Final response includes masteryProgress -> sidebar updates
-4. Session recovery via GET /api/sessions/:sessionId on page load
+4. Session recovery available via GET /api/sessions/:sessionId (not yet auto-triggered on page load)
 
 ## Out of Scope (v1)
 
-- Voice mode
+- ~~Voice mode~~ *(implemented: TTS, STT, and Listening mode)*
 - Collaborative learning
 - File uploads / custom knowledge bases
 - PDF export
@@ -230,7 +229,8 @@ Thresholds:
 - @azure/ai-projects (Azure AI SDK)
 - mssql (Azure SQL driver)
 - zod (validation)
-- typescript, ts-node
+- @azure/identity (Azure AD auth)
+- typescript, ts-node-dev
 
 ### Frontend
 - react, react-dom
@@ -238,5 +238,5 @@ Thresholds:
 - mermaid
 - react-markdown, remark-gfm
 - recharts
-- tailwindcss, postcss, autoprefixer
+- tailwindcss (v4, via @tailwindcss/vite plugin)
 - typescript, vite

@@ -80,9 +80,13 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastSpokenRef = useRef<string>('');
 
+  // Auto-scroll to bottom on new messages and during streaming
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const el = bottomRef.current;
+    if (!el) return;
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 50);
+  }, [messages, isLoading]);
 
   // Auto-speak new assistant messages in listening mode
   useEffect(() => {
@@ -118,11 +122,12 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
     return extractQuickReplies(lastAssistantContent);
   }, [lastAssistantContent]);
 
+  const noLang = !language;
+
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
         <div className="text-center max-w-lg">
-          <div className="text-5xl mb-4">🌟</div>
           <h2 className="text-2xl font-bold text-amber-900 mb-3">
             {language === 'fr' ? 'Que voulez-vous apprendre ?' : 'What would you like to master?'}
           </h2>
@@ -146,7 +151,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-3 text-left">
+          <div className={`grid grid-cols-1 gap-3 text-left ${noLang ? 'opacity-40 pointer-events-none' : ''}`}>
             {(language === 'fr' ? [
               '🔬 Je veux comprendre la physique quantique depuis zero',
               '🧠 Aide-moi a comprendre comment les reseaux de neurones apprennent',
@@ -159,7 +164,8 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
               <button
                 key={example}
                 onClick={() => onSend?.(example.replace(/^.\s/, ''))}
-                className="p-4 text-sm text-amber-900 bg-white/80 border-2 border-amber-200 rounded-2xl hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all text-left"
+                disabled={noLang}
+                className="p-4 text-sm text-amber-900 bg-white/80 border-2 border-amber-200 rounded-2xl hover:bg-amber-50 hover:border-amber-300 hover:shadow-md transition-all text-left disabled:cursor-not-allowed"
               >
                 {example}
               </button>
@@ -194,7 +200,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
             </div>
             {/* Bubble */}
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm ${
+              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 shadow-sm overflow-x-auto ${
                 message.role === 'user'
                   ? 'bg-orange-50 border-2 border-orange-200 text-amber-900'
                   : 'bg-white border-2 border-emerald-200 text-gray-800'

@@ -4,7 +4,18 @@ An AI-powered learning platform that helps you deeply master any subject by teac
 
 ## How It Works
 
-The system uses a multi-agent architecture where each agent plays a specific role in the learning process, but the learner experiences a single, seamless conversation.
+The learner selects their language (French or English), picks a topic, and starts chatting. The system uses a multi-agent architecture where each agent plays a specific role in the learning process, but the learner experiences a single, seamless conversation.
+
+### Features
+
+- **Language selection** — Choose French or English at startup; the entire UI and all agent responses adapt
+- **Reading / Listening mode** — Toggle in the header; Listening mode auto-reads responses aloud and auto-starts voice input after each reply (hands-free, great for driving)
+- **Voice input** — Dictate answers via the microphone button (Web Speech API)
+- **Text-to-speech** — Click the "Listen" button on any assistant message to hear it read aloud
+- **Quick reply buttons** — When the agent offers A/B/C choices, clickable buttons appear
+- **Mermaid diagrams** — Knowledge graphs and diagrams render as interactive SVGs
+- **Mobile-friendly** — Responsive layout with progress modal accessible via the header on small screens
+- **About modal** — "?" button in the header explains the concept in the selected language
 
 ### Learning Phases
 
@@ -459,6 +470,12 @@ ALTER ROLE db_datawriter ADD MEMBER [your-app-name];
 
 Your app will be available at `https://your-app-name.azurewebsites.net`.
 
+### Operational Notes
+
+- **Health check:** `GET /health` returns `{ "status": "ok" }` — useful for monitoring and Azure health probes
+- **Automatic cleanup:** Sessions older than 7 days are automatically deleted (runs hourly)
+- **No session recovery on page load** (yet): The API supports `GET /api/sessions/:sessionId` for session recovery, but the frontend does not auto-restore sessions on reload
+
 ## Running Tests
 
 ```bash
@@ -472,6 +489,14 @@ cd backend && npm test
 - **AI:** Azure AI Foundry Agents SDK (`@azure/ai-projects`), GPT-4o
 - **Database:** Azure SQL with `mssql` driver, Azure AD token auth
 - **Auth:** `@azure/identity` DefaultAzureCredential (Azure CLI, Managed Identity, etc.)
+
+## Design Documents
+
+These are archived design artifacts from the initial build. The codebase is the source of truth; these docs may not reflect the current state.
+
+- [`docs/plans/2026-03-06-uma-web-interface-design.md`](docs/plans/2026-03-06-uma-web-interface-design.md) — Architecture decisions, component breakdown, API spec, data flow
+- [`docs/plans/2026-03-06-uma-implementation-plan.md`](docs/plans/2026-03-06-uma-implementation-plan.md) — Step-by-step build plan with code snippets
+- `Universal_Mastery_Agent_Spec_v1.docx` — Original specification document
 
 ## License
 

@@ -58,6 +58,11 @@ export function MessageInput({ onSend, disabled, listeningMode, language }: Mess
     return () => window.removeEventListener('assistant-speech-ended', handler);
   }, [listeningMode, onSend, language]);
 
+  // Clear input when a message is being sent (e.g. via quick reply buttons)
+  useEffect(() => {
+    if (disabled) setInput('');
+  }, [disabled]);
+
   // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
@@ -69,8 +74,10 @@ export function MessageInput({ onSend, disabled, listeningMode, language }: Mess
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || disabled) return;
-    onSend(trimmed);
     setInput('');
+    // Reset textarea height immediately
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    onSend(trimmed);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {

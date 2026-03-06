@@ -1,3 +1,5 @@
+> **Status: Completed historical record.** This implementation plan was used to build the initial version. The actual codebase may differ — see the [root README](../../README.md) for the current, authoritative documentation.
+
 # Universal Mastery Agent — Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
@@ -6,7 +8,7 @@
 
 **Architecture:** Monorepo with Express.js + TypeScript backend and React + Vite + TypeScript frontend. Backend orchestrates 6 Azure AI agents via a single API endpoint with SSE streaming. Azure SQL Database for session persistence. Frontend renders a chat interface with progress sidebar, knowledge graph, and mastery visualizations.
 
-**Tech Stack:** React 18, Vite, Tailwind CSS, Express.js, TypeScript, Azure AI Projects SDK, Azure SQL (mssql), React Flow, Mermaid.js, Recharts, Zod, SSE
+**Tech Stack:** React 19, Vite 7, Tailwind CSS 4, Express.js, TypeScript, Azure AI Projects SDK, Azure SQL (mssql), React Flow, Mermaid.js, Recharts, Zod, SSE
 
 **Design doc:** `docs/plans/2026-03-06-uma-web-interface-design.md`
 

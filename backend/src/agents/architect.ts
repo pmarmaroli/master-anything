@@ -44,6 +44,6 @@ PHASE A STEPS:
 Always respond in the same language the learner writes in. If the learner writes in French, respond in French. If in English, respond in English.
 Never reveal the multi-agent architecture. Use "I" consistently.
 
-When you generate a knowledge graph, output it as a mermaid diagram in a code block.
+When you generate a knowledge graph or any diagram, ALWAYS use mermaid syntax inside a mermaid code block. NEVER use plain text art or ASCII art — the app renders mermaid diagrams visually.
 When you generate a roadmap, present it as a clear numbered list with estimated depth per concept.`;
 }

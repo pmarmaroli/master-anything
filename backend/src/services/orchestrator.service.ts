@@ -68,14 +68,22 @@ export class OrchestratorService {
   }
 
   getSystemPrompt(agent: AgentRole, session: SessionState): string {
+    let prompt: string;
     switch (agent) {
-      case 'orchestrator': return getOrchestratorPrompt(session);
-      case 'architect': return getArchitectPrompt(session);
-      case 'mentor': return getMentorPrompt(session);
-      case 'challenger': return getChallengerPrompt(session);
-      case 'naive_student': return getNaiveStudentPrompt(session);
-      case 'evaluator': return getEvaluatorPrompt(session);
+      case 'orchestrator': prompt = getOrchestratorPrompt(session); break;
+      case 'architect': prompt = getArchitectPrompt(session); break;
+      case 'mentor': prompt = getMentorPrompt(session); break;
+      case 'challenger': prompt = getChallengerPrompt(session); break;
+      case 'naive_student': prompt = getNaiveStudentPrompt(session); break;
+      case 'evaluator': prompt = getEvaluatorPrompt(session); break;
     }
+    // Global rules appended to every agent prompt
+    prompt += `
+
+ABSOLUTE RULE FOR DIAGRAMS AND SCHEMAS:
+When asked to create any diagram, schema, chart, or visual representation, you MUST use mermaid syntax inside a mermaid code block (starting with triple backticks followed by "mermaid"). Examples of valid mermaid types: graph TD, flowchart LR, sequenceDiagram, timeline, mindmap, classDiagram.
+NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain text diagrams. The app renders mermaid code as interactive visual diagrams — ASCII art will look broken.`;
+    return prompt;
   }
 
   async processMessage(
@@ -209,10 +217,24 @@ export class OrchestratorService {
       await this.sessionService.updateSession(session.sessionId, { currentStep: 'A3' });
       session.currentStep = 'A3';
     } else if (session.currentStep === 'A3') {
+      // Try to extract concepts from the knowledge graph / topic map response
+      const concepts = this.extractConcepts(response);
+      if (concepts.length > 0) {
+        session.topicMap.concepts = concepts;
+        await this.sessionService.updateTopicMap(session.sessionId, session.topicMap);
+      }
       await this.sessionService.updateSession(session.sessionId, { currentStep: 'A4' });
       session.currentStep = 'A4';
     } else if (session.currentStep === 'A4') {
-      // Roadmap presented, transition to learning loop
+      // Roadmap presented — also try to extract concepts if not already set
+      if (session.topicMap.concepts.length === 0) {
+        const concepts = this.extractConcepts(response);
+        if (concepts.length > 0) {
+          session.topicMap.concepts = concepts;
+          await this.sessionService.updateTopicMap(session.sessionId, session.topicMap);
+        }
+      }
+      // Transition to learning loop
       await this.sessionService.updateSession(session.sessionId, {
         currentPhase: 'learning_loop',
         currentStep: 'B1',
@@ -265,6 +287,40 @@ export class OrchestratorService {
       // Could not parse — default advance step
       await this.advanceStep(session);
     }
+  }
+
+  private extractConcepts(response: string): string[] {
+    const concepts: string[] = [];
+
+    // Match numbered list items: "1. Concept name", "1) Concept name", "**1.** Concept name"
+    const numberedMatches = response.match(/(?:^|\n)\s*\**\d+[.)]\**\s*\**([^*\n:]+)\**/g);
+    if (numberedMatches && numberedMatches.length >= 2) {
+      for (const match of numberedMatches) {
+        const cleaned = match
+          .replace(/^\s*\**\d+[.)]\**\s*/, '')
+          .replace(/\*\*/g, '')
+          .replace(/[:–—].+$/, '') // Remove descriptions after colon or dash
+          .trim();
+        if (cleaned && cleaned.length > 2 && cleaned.length < 100) {
+          concepts.push(cleaned);
+        }
+      }
+    }
+
+    // Fallback: try mermaid node labels like [Concept Name] or (Concept Name)
+    if (concepts.length === 0) {
+      const mermaidMatches = response.match(/\[([^\]]{3,60})\]/g);
+      if (mermaidMatches && mermaidMatches.length >= 2) {
+        for (const match of mermaidMatches) {
+          const label = match.slice(1, -1).trim();
+          if (label && !label.includes('-->') && !label.includes('---')) {
+            concepts.push(label);
+          }
+        }
+      }
+    }
+
+    return concepts;
   }
 
   private async advanceStep(session: SessionState): Promise<void> {
