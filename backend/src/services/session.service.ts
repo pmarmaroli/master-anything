@@ -8,6 +8,7 @@ import {
   KnowledgeGap,
   ConversationMessage,
   AgentRole,
+  Reward,
   LearningPhase,
   LearningStep,
 } from '../types';
@@ -58,6 +59,10 @@ export class SessionService {
       gapRegistry: [],
       masteryScores: {},
       spacedRepetition: [],
+      adventureMode: false,
+      inventory: [],
+      conversationSummary: '',
+      messageCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -131,6 +136,10 @@ export class SessionService {
       gapRegistry: [],
       masteryScores,
       spacedRepetition,
+      adventureMode: row.adventure_mode === true || row.adventure_mode === 1,
+      inventory: JSON.parse(row.inventory || '[]'),
+      conversationSummary: row.conversation_summary || '',
+      messageCount: row.message_count || 0,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
@@ -138,7 +147,7 @@ export class SessionService {
 
   async updateSession(
     sessionId: string,
-    updates: Partial<Pick<SessionState, 'threadId' | 'currentPhase' | 'currentStep' | 'conceptIndex'>>
+    updates: Partial<Pick<SessionState, 'threadId' | 'currentPhase' | 'currentStep' | 'conceptIndex' | 'adventureMode'>>
   ): Promise<void> {
     const pool = await getPool();
     const setClauses: string[] = ['updated_at = GETUTCDATE()'];
@@ -160,10 +169,38 @@ export class SessionService {
       setClauses.push('concept_index = @conceptIndex');
       request.input('conceptIndex', updates.conceptIndex);
     }
+    if (updates.adventureMode !== undefined) {
+      setClauses.push('adventure_mode = @adventureMode');
+      request.input('adventureMode', updates.adventureMode);
+    }
 
     await request.query(
       `UPDATE sessions SET ${setClauses.join(', ')} WHERE session_id = @sessionId`
     );
+  }
+
+  async saveInventory(sessionId: string, inventory: Reward[]): Promise<void> {
+    const pool = await getPool();
+    await pool.request()
+      .input('sessionId', sessionId)
+      .input('inventory', JSON.stringify(inventory))
+      .query(`UPDATE sessions SET inventory = @inventory WHERE session_id = @sessionId`);
+  }
+
+  async saveSummary(sessionId: string, summary: string, messageCount: number): Promise<void> {
+    const pool = await getPool();
+    await pool.request()
+      .input('sessionId', sessionId)
+      .input('summary', summary)
+      .input('messageCount', messageCount)
+      .query(`UPDATE sessions SET conversation_summary = @summary, message_count = @messageCount WHERE session_id = @sessionId`);
+  }
+
+  async incrementMessageCount(sessionId: string): Promise<void> {
+    const pool = await getPool();
+    await pool.request()
+      .input('sessionId', sessionId)
+      .query(`UPDATE sessions SET message_count = ISNULL(message_count, 0) + 1 WHERE session_id = @sessionId`);
   }
 
   async updateLearnerProfile(sessionId: string, updates: Partial<LearnerProfile>): Promise<void> {

@@ -55,12 +55,13 @@ export function AboutModal({ show, onClose, language }: AboutModalProps) {
               <li>{fr ? 'Vous apprenez chaque concept, puis vous l\'expliquez avec vos mots' : 'You learn each concept, then explain it in your own words'}</li>
               <li>{fr ? 'Un "eleve naif" vous pose des questions pour tester votre comprehension' : 'A "naive student" asks questions to test your understanding'}</li>
               <li>{fr ? 'Vous etes evalue et guidez jusqu\'a la maitrise complete' : "You're scored and guided until full mastery"}</li>
+              <li>{fr ? 'En mode Aventure, gagnez des recompenses et construisez votre inventaire' : 'In Adventure Mode, earn rewards and build your inventory'}</li>
             </ol>
           </div>
 
           <div className="bg-white/80 rounded-xl p-4 border border-amber-200">
             <h3 className="font-semibold text-amber-900 mb-2">
-              {fr ? '6 agents IA collaborent pour vous' : '6 AI agents collaborate for you'}
+              {fr ? '7 agents IA collaborent pour vous' : '7 AI agents collaborate for you'}
             </h3>
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
               <div><span className="font-medium text-amber-800">{fr ? 'Architecte' : 'Architect'}</span> — {fr ? 'evalue et planifie' : 'assesses & plans'}</div>
@@ -68,6 +69,7 @@ export function AboutModal({ show, onClose, language }: AboutModalProps) {
               <div><span className="font-medium text-amber-800">{fr ? 'Challengeur' : 'Challenger'}</span> — {fr ? 'questionne en profondeur' : 'probes deeply'}</div>
               <div><span className="font-medium text-amber-800">{fr ? 'Eleve naif' : 'Naive Student'}</span> — {fr ? 'force la simplification' : 'forces simplification'}</div>
               <div><span className="font-medium text-amber-800">{fr ? 'Evaluateur' : 'Evaluator'}</span> — {fr ? 'mesure la maitrise' : 'measures mastery'}</div>
+              <div><span className="font-medium text-amber-800">{fr ? 'Rendu visuel' : 'Renderer'}</span> — {fr ? 'cree les schemas' : 'creates visuals'}</div>
               <div><span className="font-medium text-amber-800">{fr ? 'Orchestrateur' : 'Orchestrator'}</span> — {fr ? 'coordonne le tout' : 'coordinates all'}</div>
             </div>
           </div>

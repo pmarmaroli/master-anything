@@ -10,6 +10,7 @@ const masteryRequestSchema = z.object({
   sessionId: z.string().nullable().optional(),
   threadId: z.string().nullable().optional(),
   language: z.string().optional(),
+  adventureMode: z.boolean().optional(),
 });
 
 router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
       return;
     }
 
-    const { message, sessionId, threadId, language } = parsed.data;
+    const { message, sessionId, threadId, language, adventureMode } = parsed.data;
 
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
@@ -33,6 +34,7 @@ router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
       sessionId || undefined,
       threadId || undefined,
       language,
+      adventureMode,
       (token: string) => {
         res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);
       }

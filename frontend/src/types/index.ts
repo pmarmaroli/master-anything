@@ -1,5 +1,5 @@
 export type LearningPhase = 'discovery' | 'learning_loop' | 'validation';
-export type AgentRole = 'orchestrator' | 'architect' | 'mentor' | 'challenger' | 'naive_student' | 'evaluator';
+export type AgentRole = 'orchestrator' | 'architect' | 'mentor' | 'challenger' | 'naive_student' | 'evaluator' | 'renderer';
 
 export interface ConceptScore {
   clarity: number;
@@ -17,6 +17,13 @@ export interface KnowledgeGraphNode {
   prerequisites: string[];
 }
 
+export interface Reward {
+  name: string;
+  emoji: string;
+  description: string;
+  concept: string;
+}
+
 export interface MasteryProgress {
   currentPhase: LearningPhase;
   currentStep: string;
@@ -27,6 +34,7 @@ export interface MasteryProgress {
   conceptScores: Record<string, ConceptScore>;
   reviewsDue: number;
   knowledgeGraph: KnowledgeGraphNode[];
+  inventory: Reward[];
 }
 
 export interface ChatMessage {

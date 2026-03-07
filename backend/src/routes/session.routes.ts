@@ -33,6 +33,7 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
       totalConcepts: session.topicMap.concepts.length,
       overallMastery,
       conceptScores: session.masteryScores,
+      inventory: session.inventory || [],
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
     };

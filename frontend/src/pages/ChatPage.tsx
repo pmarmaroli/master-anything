@@ -8,13 +8,15 @@ import { MasteryBadge } from '../components/MasteryBadge';
 import { PhaseIndicator } from '../components/PhaseIndicator';
 import { AboutModal } from '../components/AboutModal';
 import { ProgressModal } from '../components/ProgressModal';
+import { InventoryModal } from '../components/InventoryModal';
 
 export function ChatPage() {
-  const { messages, progress, isLoading, sendMessage, language, setLanguage } = useChat();
+  const { messages, progress, isLoading, sendMessage, language, setLanguage, adventureMode, setAdventureMode } = useChat();
   const [masteryBadgeConcept, setMasteryBadgeConcept] = useState<string | null>(null);
   const [listeningMode, setListeningMode] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
 
   const handleDismissBadge = useCallback(() => setMasteryBadgeConcept(null), []);
 
@@ -47,6 +49,25 @@ export function ChatPage() {
           >
             %
           </button>
+          {adventureMode && (
+            <button
+              onClick={() => setShowInventory(true)}
+              className="w-7 h-7 rounded-full bg-purple-100 border border-purple-300 text-purple-700 text-xs font-bold hover:bg-purple-200 transition-colors"
+              title={language === 'fr' ? 'Inventaire' : 'Inventory'}
+            >
+              🎒
+            </button>
+          )}
+          <button
+            onClick={() => setAdventureMode(!adventureMode)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              adventureMode
+                ? 'bg-purple-500 text-white shadow-sm'
+                : 'bg-white/80 border border-amber-200 text-amber-700 hover:bg-amber-50'
+            }`}
+          >
+            {adventureMode ? '⚔️ Adventure' : '📖 Study'}
+          </button>
           <button
             onClick={() => setListeningMode(!listeningMode)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
@@ -75,6 +96,12 @@ export function ChatPage() {
 
       <AboutModal show={showAbout} onClose={() => setShowAbout(false)} language={language} />
       <ProgressModal show={showProgress} onClose={() => setShowProgress(false)} progress={progress} language={language} />
+      <InventoryModal
+        show={showInventory}
+        onClose={() => setShowInventory(false)}
+        inventory={progress?.inventory || []}
+        language={language}
+      />
 
       {/* Mastery celebration overlay */}
       <MasteryBadge

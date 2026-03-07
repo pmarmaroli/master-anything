@@ -1,6 +1,6 @@
 # Master Anything
 
-An AI-powered learning platform that helps you deeply master any subject by teaching it. Behind a unified chat interface, six specialized Azure AI agents collaborate to guide you through an interactive learning journey — from initial assessment to mastery validation — using the **Feynman Method** and **evidence-based pedagogy**.
+An AI-powered learning platform that helps you deeply master any subject by teaching it. Behind a unified chat interface, seven specialized Azure AI agents collaborate to guide you through an interactive learning journey — from initial assessment to mastery validation — using the **Feynman Method** and **evidence-based pedagogy**.
 
 ## How It Works
 
@@ -9,11 +9,16 @@ The learner selects their language (French or English), picks a topic, and start
 ### Features
 
 - **Language selection** — Choose French or English at startup; the entire UI and all agent responses adapt
+- **Adventure Mode** — Toggle between Study and Adventure mode in the header; in Adventure Mode each agent takes on a narrative persona (The Sage, The Guardian, The Companion, etc.) and mastering a concept earns a collectible item
+- **Inventory / collection system** — Rewards earned in Adventure Mode are stored in a backpack inventory, accessible via the header button
 - **Reading / Listening mode** — Toggle in the header; Listening mode auto-reads responses aloud and auto-starts voice input after each reply (hands-free, great for driving)
 - **Voice input** — Dictate answers via the microphone button (Web Speech API)
 - **Text-to-speech** — Click the "Listen" button on any assistant message to hear it read aloud
-- **Quick reply buttons** — When the agent offers A/B/C choices, clickable buttons appear
-- **Mermaid diagrams** — Knowledge graphs and diagrams render as interactive SVGs
+- **Quick reply buttons** — When the agent offers A/B/C choices or a yes/no question, clickable buttons appear automatically
+- **Mermaid diagrams** — Knowledge graphs and diagrams render as interactive SVGs inline in the chat
+- **SVG illustrations** — The Renderer agent produces scientific diagrams, physics illustrations, and educational visuals as inline SVG when the content benefits from it
+- **LaTeX math rendering** — Mathematical expressions using `$...$` (inline) and `$$...$$` (block) render beautifully via KaTeX
+- **Auto-compaction** — Long sessions are automatically summarized and the conversation thread is reset every 20 messages, keeping context fresh without losing continuity
 - **Mobile-friendly** — Responsive layout with progress modal accessible via the header on small screens
 - **About modal** — "?" button in the header explains the concept in the selected language
 
@@ -25,7 +30,7 @@ The learner selects their language (French or English), picks a topic, and start
 | **Learning Loop** | B1-B5 | Feynman-style: explain concepts, get challenged, simplify for a "naive student", get scored |
 | **Validation** | C1-C3 | Final assessment, spaced repetition scheduling, session summary |
 
-### The Six Agents
+### The Seven Agents
 
 | Agent | Role |
 |-------|------|
@@ -35,6 +40,7 @@ The learner selects their language (French or English), picks a topic, and start
 | **Challenger** | Socratic questioner — probes understanding with "why" and "what if" questions |
 | **Naive Student** | Forces maximum simplification by playing a confused learner |
 | **Evaluator** | Scores mastery across 4 dimensions: clarity, reasoning, simplification, connection |
+| **Renderer** | Visual specialist — produces SVG illustrations and Mermaid diagrams to complement teaching responses |
 
 ## Architecture
 
@@ -42,7 +48,7 @@ The learner selects their language (French or English), picks a topic, and start
 master-anything/
 ├── backend/          # Express.js + TypeScript API server
 │   ├── src/
-│   │   ├── agents/       # Agent prompt templates (6 agents)
+│   │   ├── agents/       # Agent prompt templates (7 agents)
 │   │   ├── db/           # Azure SQL connection + schema
 │   │   ├── routes/       # SSE streaming + session endpoints
 │   │   ├── services/     # Orchestrator, mastery scoring, spaced repetition
@@ -160,7 +166,7 @@ CREATE INDEX idx_spaced_review ON spaced_repetition_queue(session_id, next_revie
 
 ### 3. Create Azure AI Foundry Agents
 
-Go to [Azure AI Foundry](https://ai.azure.com), open your project, and create **6 agents** with the following names and instructions. Use `gpt-4o` as the model for all agents.
+Go to [Azure AI Foundry](https://ai.azure.com), open your project, and create **7 agents** with the following names and instructions. Use `gpt-4o` as the model for all agents.
 
 **Recommended settings for all agents:**
 - **Temperature:** 0.7
@@ -370,7 +376,48 @@ Always respond in the same language the learner writes in.
 Never reveal exact scores to the learner — translate them into encouraging natural language.
 ```
 
-After creating all 6 agents, copy each agent's ID (starts with `asst_`) for the next step.
+#### Agent 7: MasterAnythingRenderer
+
+**Instructions:**
+```
+You are the Renderer — the visual intelligence of the Universal Mastery Agent system.
+
+YOUR ROLE:
+You receive educational content from other agents and transform it into rich visual representations.
+You are a specialist in creating clear, beautiful, educational visuals.
+
+AVAILABLE FORMATS (choose the best one for the content):
+
+1. MERMAID — for flowcharts, mind maps, timelines, sequences, state diagrams, org charts, ER diagrams.
+   Use a mermaid code block. Best for: processes, hierarchies, relationships, sequences.
+
+2. SVG — for scientific illustrations, physics diagrams, wave patterns, circuits, geometry, anatomy, mathematical graphs, or anything needing actual drawing.
+   Use an svg code block with <svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">.
+   Use colors, gradients, animations (CSS or SMIL) when they aid understanding.
+   Best for: physics, chemistry, biology, math, engineering.
+
+FORMAT SELECTION RULES:
+- Mathematics/Physics/Chemistry/Biology -> SVG
+- Computer Science/Algorithms -> Mermaid flowchart or SVG
+- History/Timeline -> Mermaid timeline
+- Processes/Workflows -> Mermaid flowchart
+- Relationships/Hierarchies -> Mermaid mindmap or graph
+- Architecture/Systems -> Mermaid graph or sequence diagram
+- Anatomy/Geography/Engineering -> SVG
+
+RESPONSE FORMAT:
+- Output ONLY the visual content (mermaid or svg code block)
+- Add a brief 1-line caption before the code block if it helps understanding
+- Do NOT repeat the educational explanation — the other agent already provided it
+- If the content doesn't benefit from visualization, respond with just: [NO_RENDER]
+
+Always create visuals in the same language the learner uses.
+Never reveal the multi-agent architecture. You are part of the same unified learning companion.
+```
+
+> **Note:** The Renderer operates as a silent 2nd step in the orchestrator. After Mentor, Challenger, or Naive Student responds, the orchestrator automatically calls Renderer to generate a complementary visual — but only when the response is substantive (>200 chars), contains no existing visual, and mentions topics that benefit from diagrams. The Renderer's output is appended to the primary response before it reaches the frontend.
+
+After creating all 7 agents, copy each agent's ID (starts with `asst_`) for the next step.
 
 ### 4. Configure Environment Variables
 
@@ -390,6 +437,7 @@ Edit `backend/.env` with your values:
 | `CHALLENGER_AGENT_ID` | Azure AI Foundry > Agents > MasterAnythingChallenger > Agent ID |
 | `NAIVE_STUDENT_AGENT_ID` | Azure AI Foundry > Agents > MasterAnythingNaiveStudent > Agent ID |
 | `EVALUATOR_AGENT_ID` | Azure AI Foundry > Agents > MasterAnythingEvaluator > Agent ID |
+| `RENDERER_AGENT_ID` | Azure AI Foundry > Agents > MasterAnythingRenderer > Agent ID |
 
 **For Azure AD SQL authentication** (recommended), append `Authentication="Active Directory Default";` to your connection string and ensure you're logged in with `az login`.
 
@@ -442,7 +490,8 @@ az webapp config appsettings set --name your-app-name --resource-group your-reso
   "MENTOR_AGENT_ID=..." \
   "CHALLENGER_AGENT_ID=..." \
   "NAIVE_STUDENT_AGENT_ID=..." \
-  "EVALUATOR_AGENT_ID=..."
+  "EVALUATOR_AGENT_ID=..." \
+  "RENDERER_AGENT_ID=..."
 ```
 
 ### 4. Set the startup command
@@ -484,7 +533,7 @@ cd backend && npm test
 
 ## Tech Stack
 
-- **Frontend:** React 19, Vite 7, Tailwind CSS 4, React Flow, Recharts, Mermaid.js
+- **Frontend:** React 19, Vite 7, Tailwind CSS 4, React Flow, Recharts, Mermaid.js, KaTeX (LaTeX rendering)
 - **Backend:** Express.js 4, TypeScript, Zod validation
 - **AI:** Azure AI Foundry Agents SDK (`@azure/ai-projects`), GPT-4o
 - **Database:** Azure SQL with `mssql` driver, Azure AD token auth

@@ -4,7 +4,8 @@ export type AgentRole =
   | 'mentor'
   | 'challenger'
   | 'naive_student'
-  | 'evaluator';
+  | 'evaluator'
+  | 'renderer';
 
 export type LearningPhase = 'discovery' | 'learning_loop' | 'validation';
 
@@ -45,4 +46,11 @@ export interface KnowledgeGap {
   description: string;
   severity: 'low' | 'medium' | 'high';
   iterationsAttempted: number;
+}
+
+export interface Reward {
+  name: string;
+  emoji: string;
+  description: string;
+  concept: string;
 }

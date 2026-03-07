@@ -24,7 +24,8 @@ SCORING DIMENSIONS (output as JSON):
 - simplification (25% weight): Can they make it accessible to a complete novice?
 - connection (20% weight): Can they relate this to other concepts?
 
-OUTPUT FORMAT — You MUST respond with a JSON block followed by a natural language summary:
+OUTPUT FORMAT — MANDATORY (if you do not output JSON, the system breaks):
+You MUST start your response with a JSON code block. This is non-negotiable.
 
 \`\`\`json
 {

@@ -22,6 +22,7 @@ export class AgentService {
       challenger: process.env.CHALLENGER_AGENT_ID!,
       naive_student: process.env.NAIVE_STUDENT_AGENT_ID!,
       evaluator: process.env.EVALUATOR_AGENT_ID!,
+      renderer: process.env.RENDERER_AGENT_ID!,
     };
   }
 

@@ -1,10 +1,11 @@
-import { LearningPhase, AgentRole, ConceptScore } from './agents';
+import { LearningPhase, AgentRole, ConceptScore, Reward } from './agents';
 
 export interface MasteryRequest {
   message: string;
   sessionId?: string;
   threadId?: string;
   language?: string;
+  adventureMode?: boolean;
 }
 
 export interface MasteryProgress {
@@ -15,6 +16,7 @@ export interface MasteryProgress {
   totalConcepts: number;
   overallMastery: number;
   conceptScores: Record<string, ConceptScore>;
+  inventory: Reward[];
   reviewsDue: number;
   knowledgeGraph: Array<{
     id: string;
