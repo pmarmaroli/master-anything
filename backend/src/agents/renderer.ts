@@ -1,7 +1,7 @@
 import { SessionState } from '../types';
 
 export function getRendererPrompt(session: SessionState): string {
-  const currentConcept = session.topicMap.concepts[session.conceptIndex] || '';
+  const currentConcept = session.topicMap.concepts[session.conceptIndex] || 'Not yet defined';
 
   return `You are the Renderer Agent. You generate STRUCTURED DATA that specialized libraries render visually. You NEVER generate raw SVG coordinates or paths — libraries handle all visual rendering.
 
