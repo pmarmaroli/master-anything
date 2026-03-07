@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import type { ChatMessage } from '../types';
 import { MermaidDiagram } from './MermaidDiagram';
+import { playButtonPress } from '../utils/sounds';
 
 interface ChatAreaProps {
   messages: ChatMessage[];
@@ -359,7 +360,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
           {quickReplies.map((reply) => (
             <button
               key={reply}
-              onClick={() => onSend?.(reply)}
+              onClick={() => { if (adventureMode) playButtonPress(); onSend?.(reply); }}
               className={`px-4 py-2 text-sm transition-all ${
                 adventureMode
                   ? 'adventure-quick-reply'

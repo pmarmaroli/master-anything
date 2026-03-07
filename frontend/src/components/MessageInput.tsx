@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect, type KeyboardEvent } from 'react';
+import { playButtonPress } from '../utils/sounds';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
@@ -75,6 +76,7 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
   const handleSend = () => {
     const trimmed = input.trim();
     if (!trimmed || disabled) return;
+    if (adventureMode) playButtonPress();
     setInput('');
     // Reset textarea height immediately
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
