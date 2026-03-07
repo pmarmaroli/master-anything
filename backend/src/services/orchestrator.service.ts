@@ -389,6 +389,7 @@ ADVENTURE MODE ACTIVE — You are in a pixel-art dungeon RPG learning experience
 ABSOLUTE LENGTH RULE:
 - NEVER exceed 3 sentences per message. No exceptions.
 - If you need more, split with [SPLIT] markers. Each chunk = 2-3 sentences max.
+- EXCEPTION: mermaid diagrams and code blocks are FULLY EXEMPT — always output them completely, never truncate.
 
 TONE — TEEN RULES (13-15 year olds):
 - Talk like a smart older friend in a video game, NOT a teacher
@@ -440,8 +441,9 @@ A2 — Scouting (diagnosis as room exploration):
 - Make it feel like exploring, not testing.
 
 A3 — Map Reveal:
-- Output mermaid diagram as a dungeon map: nodes = rooms/bosses, edges = paths
-- Keep it to 5-8 nodes max with short labels
+- Output a mermaid diagram as a dungeon map (ALWAYS output the full diagram — diagrams are exempt from the sentence limit)
+- REQUIRED format: every node MUST use NodeID[Concept Name] syntax, e.g. A[Photosynthesis] --> B[Light Reactions]
+- Keep it to 5-8 nodes max with short labels (no emoji inside node labels)
 
 A4 — Boss List:
 - Present as a hit list: "OK here's your target list. [X] bosses:"
@@ -700,37 +702,60 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
   }
 
   private extractConcepts(response: string): string[] {
-    const concepts: string[] = [];
+    const seen = new Set<string>();
+    const add = (s: string) => {
+      const c = s.replace(/\*\*/g, '').replace(/[:–—].+$/, '').trim();
+      if (c && c.length > 2 && c.length < 100 && !seen.has(c.toLowerCase())) {
+        seen.add(c.toLowerCase());
+      }
+    };
 
-    // Match numbered list items: "1. Concept name", "1) Concept name", "**1.** Concept name"
+    // Strategy 1: numbered list items "1. Concept", "1) Concept", "**1.** Concept"
     const numberedMatches = response.match(/(?:^|\n)\s*\**\d+[.)]\**\s*\**([^*\n:]+)\**/g);
-    if (numberedMatches && numberedMatches.length >= 2) {
+    if (numberedMatches) {
       for (const match of numberedMatches) {
-        const cleaned = match
-          .replace(/^\s*\**\d+[.)]\**\s*/, '')
-          .replace(/\*\*/g, '')
-          .replace(/[:–—].+$/, '') // Remove descriptions after colon or dash
-          .trim();
-        if (cleaned && cleaned.length > 2 && cleaned.length < 100) {
-          concepts.push(cleaned);
-        }
+        add(match.replace(/^\s*\**\d+[.)]\**\s*/, ''));
       }
     }
 
-    // Fallback: try mermaid node labels like [Concept Name] or (Concept Name)
-    if (concepts.length === 0) {
-      const mermaidMatches = response.match(/\[([^\]]{3,60})\]/g);
-      if (mermaidMatches && mermaidMatches.length >= 2) {
-        for (const match of mermaidMatches) {
-          const label = match.slice(1, -1).trim();
-          if (label && !label.includes('-->') && !label.includes('---')) {
-            concepts.push(label);
-          }
-        }
+    // Strategy 2: mermaid node labels NodeID[Label] — required format in A3
+    const mermaidBracket = response.match(/\w+\[([^\]"]{3,60})\]/g);
+    if (mermaidBracket) {
+      for (const match of mermaidBracket) {
+        const label = match.replace(/^\w+\[/, '').slice(0, -1).trim();
+        if (label && !label.includes('-->')) add(label);
       }
     }
 
-    return concepts;
+    // Strategy 3: mermaid quoted labels NodeID["Label"]
+    const mermaidQuoted = response.match(/\w+\["([^"]{3,60})"\]/g);
+    if (mermaidQuoted) {
+      for (const match of mermaidQuoted) {
+        const label = match.replace(/^\w+\["/, '').replace(/"\]$/, '').trim();
+        if (label) add(label);
+      }
+    }
+
+    // Strategy 4: bullet list items "- Concept" or "• Concept"
+    const bulletMatches = response.match(/(?:^|\n)\s*[-•]\s+\**([^*\n:]{3,80})\**/g);
+    if (bulletMatches) {
+      for (const match of bulletMatches) {
+        add(match.replace(/^\s*[-•]\s+/, ''));
+      }
+    }
+
+    // Strategy 5: bold terms **Concept** (standalone, not in a sentence)
+    const boldMatches = response.match(/\*\*([^*]{3,60})\*\*/g);
+    if (boldMatches) {
+      for (const match of boldMatches) {
+        const label = match.replace(/\*\*/g, '').trim();
+        if (label && label.split(' ').length <= 6) add(label);
+      }
+    }
+
+    const concepts = Array.from(seen);
+    // Re-capitalise first letter
+    return concepts.map(c => c.charAt(0).toUpperCase() + c.slice(1));
   }
 
   private async advanceStep(session: SessionState): Promise<void> {
