@@ -29,7 +29,7 @@ No changes to the streaming pipeline, session management, or agent orchestration
 | Domain | Library | Output format |
 |--------|---------|---------------|
 | Geometry, trig, calculus, optics | JSXGraph | `jsxgraph` JS block |
-| Molecules, chemical structures | Kekule.js | `kekule` JS block |
+| Molecules, chemical structures | smiles-drawer | `kekule` SMILES block |
 | Physics simulations | Matter.js | `matterjs` JS block |
 | Circuit schematics, logic gates | Custom JSON | `circuit` JSON block |
 | Flowcharts, timelines, mind maps | Mermaid | `mermaid` block (unchanged) |
@@ -78,8 +78,8 @@ Update `callRenderer()` input message to mention the new formats.
 
 **`KekuleRenderer.tsx`**
 - Detects `language-kekule` code blocks
-- npm: `kekule`
-- Executes JS in scoped context, renders 2D molecule viewer into div
+- npm: `smiles-drawer` (not `kekule` — implementation uses smiles-drawer for SMILES string rendering)
+- Renders to `<canvas>` element via dynamic import
 
 **`MatterJSRenderer.tsx`**
 - Detects `language-matterjs` code blocks
@@ -116,7 +116,7 @@ Extend `MarkdownContent` code handler to detect new language tags and route to r
 ```
 frontend:
   jsxgraph
-  kekule
+  smiles-drawer
   matter-js
   @types/matter-js
 ```
