@@ -252,7 +252,7 @@ export function ChatPage() {
       />
 
       {/* Round timer — adventure mode boss fights only */}
-      <RoundTimer active={!!showBossBar} language={language} />
+      <RoundTimer active={!!showBossBar} language={language ?? undefined} />
     </div>
   );
 }
