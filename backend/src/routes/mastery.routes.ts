@@ -29,6 +29,9 @@ router.post('/universal-mastery-agent', async (req: Request, res: Response) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
+    // Send immediate thinking indicator so user sees activity right away
+    res.write(`data: ${JSON.stringify({ type: 'thinking' })}\n\n`);
+
     const result = await orchestrator.processMessageStreaming(
       message,
       sessionId || undefined,

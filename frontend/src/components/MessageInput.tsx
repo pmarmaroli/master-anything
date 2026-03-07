@@ -5,11 +5,12 @@ interface MessageInputProps {
   disabled: boolean;
   listeningMode?: boolean;
   language?: string | null;
+  adventureMode?: boolean;
 }
 
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-export function MessageInput({ onSend, disabled, listeningMode, language }: MessageInputProps) {
+export function MessageInput({ onSend, disabled, listeningMode, language, adventureMode }: MessageInputProps) {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -117,19 +118,32 @@ export function MessageInput({ onSend, disabled, listeningMode, language }: Mess
   }, [isListening, language]);
 
   return (
-    <div className="border-t border-amber-200/60 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white/50 backdrop-blur-sm flex-shrink-0">
+    <div className={`border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 ${
+      adventureMode
+        ? 'adventure-input-area border-[#2a2a4a]'
+        : 'border-amber-200/60 bg-white/50 backdrop-blur-sm'
+    }`}
+      style={adventureMode ? { backgroundColor: '#1a1a2e', borderColor: '#2a2a4a' } : undefined}
+    >
       <div className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={language === 'fr' ? 'Tapez votre reponse ici...' : 'Type your answer here...'}
+          placeholder={adventureMode
+            ? (language === 'fr' ? 'Frappe ici...' : 'Strike here...')
+            : (language === 'fr' ? 'Tapez votre reponse ici...' : 'Type your answer here...')}
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none rounded-2xl border-2 border-amber-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 disabled:opacity-50 placeholder:text-amber-400"
+          className={`flex-1 resize-none px-4 py-3 text-sm focus:outline-none disabled:opacity-50 ${
+            adventureMode
+              ? 'adventure-input border-2 border-[#2a2a4a] focus:border-[#e94560]'
+              : 'rounded-2xl border-2 border-amber-200 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 placeholder:text-amber-400'
+          }`}
+          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#0f0f23', color: '#e0e0e0', fontFamily: "'Press Start 2P', cursive", fontSize: '10px' } : undefined}
         />
-        {SpeechRecognition && (
+        {SpeechRecognition && !adventureMode && (
           <button
             onClick={toggleListening}
             disabled={disabled}
@@ -140,15 +154,20 @@ export function MessageInput({ onSend, disabled, listeningMode, language }: Mess
             } disabled:opacity-40`}
             title={isListening ? 'Stop recording' : 'Voice input'}
           >
-            🎙️
+            \uD83C\uDF99\uFE0F
           </button>
         )}
         <button
           onClick={handleSend}
           disabled={disabled || !input.trim()}
-          className="rounded-2xl bg-amber-500 px-3 sm:px-5 py-3 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm whitespace-nowrap"
+          className={`px-3 sm:px-5 py-3 text-sm font-medium text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap ${
+            adventureMode
+              ? 'adventure-send-btn'
+              : 'rounded-2xl bg-amber-500 hover:bg-amber-600 shadow-sm'
+          }`}
+          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#e94560', boxShadow: '3px 3px 0px #000', fontFamily: "'Press Start 2P', cursive", fontSize: '9px' } : undefined}
         >
-          {language === 'fr' ? 'Envoyer' : 'Send'}
+          {adventureMode ? '\u2694\uFE0F' : (language === 'fr' ? 'Envoyer' : 'Send')}
         </button>
       </div>
     </div>

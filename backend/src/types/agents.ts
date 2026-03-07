@@ -54,3 +54,39 @@ export interface Reward {
   description: string;
   concept: string;
 }
+
+export type AdventureEventType =
+  | 'boss_damage'
+  | 'boss_defeated'
+  | 'boss_counterattack'
+  | 'door_opened'
+  | 'map_revealed'
+  | 'wall_block_destroyed'
+  | 'wall_destroyed'
+  | 'loot_drop'
+  | null;
+
+export interface AdventureEvent {
+  event: AdventureEventType;
+  boss_hp: number;
+  damage_dealt: number;
+  loot: { name: string; icon: string } | null;
+  room_progress: string;
+  wall_progress: string;
+}
+
+export interface AdventureState {
+  mode: 'adventure' | 'study';
+  dungeon_map_revealed: boolean;
+  current_boss: string | null;
+  boss_hp: number;
+  boss_max_hp: number;
+  bosses_defeated: string[];
+  loot_inventory: { name: string; icon: string; concept: string }[];
+  total_damage_dealt: number;
+  current_room: number;
+  total_rooms: number;
+  wall_blocks_remaining: number;
+  wall_blocks_total: number;
+  streak: number;
+}

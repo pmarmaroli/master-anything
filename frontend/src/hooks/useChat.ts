@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import type { ChatMessage, MasteryProgress, SSEEvent, AgentRole } from '../types';
+import type { ChatMessage, MasteryProgress, SSEEvent, AgentRole, AdventureEvent } from '../types';
 
 interface UseChatReturn {
   messages: ChatMessage[];
@@ -11,6 +11,7 @@ interface UseChatReturn {
   setLanguage: (lang: string) => void;
   adventureMode: boolean;
   setAdventureMode: (mode: boolean) => void;
+  lastAdventureEvent: AdventureEvent | null;
   sendMessage: (content: string) => Promise<void>;
   loadSession: (sessionId: string) => Promise<void>;
 }
@@ -25,6 +26,7 @@ export function useChat(): UseChatReturn {
 
   const [language, setLanguage] = useState<string | null>(null);
   const [adventureMode, setAdventureMode] = useState(false);
+  const [lastAdventureEvent, setLastAdventureEvent] = useState<AdventureEvent | null>(null);
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: ChatMessage = {
@@ -96,6 +98,7 @@ export function useChat(): UseChatReturn {
               if (event.sessionId) setSessionId(event.sessionId);
               if (event.threadId) setThreadId(event.threadId);
               if (event.masteryProgress) setProgress(event.masteryProgress);
+              if (event.adventure) setLastAdventureEvent(event.adventure);
               if (event.currentAgent) {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -153,5 +156,5 @@ export function useChat(): UseChatReturn {
     }
   }, []);
 
-  return { messages, progress, isLoading, sessionId, threadId, language, setLanguage, adventureMode, setAdventureMode, sendMessage, loadSession };
+  return { messages, progress, isLoading, sessionId, threadId, language, setLanguage, adventureMode, setAdventureMode, lastAdventureEvent, sendMessage, loadSession };
 }

@@ -1,4 +1,4 @@
-import { AgentRole, LearningPhase, LearningStep, ConceptScore, KnowledgeGap, Reward } from './agents';
+import { AgentRole, LearningPhase, LearningStep, ConceptScore, KnowledgeGap, Reward, AdventureState } from './agents';
 
 export interface LearnerProfile {
   level: 'beginner' | 'intermediate' | 'advanced';
@@ -43,6 +43,7 @@ export interface SessionState {
   spacedRepetition: SpacedRepetitionItem[];
   adventureMode: boolean;
   inventory: Reward[];
+  adventureState: AdventureState;
   conversationSummary: string;
   messageCount: number;
   createdAt: Date;

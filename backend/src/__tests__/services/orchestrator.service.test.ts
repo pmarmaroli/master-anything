@@ -25,6 +25,12 @@ describe('OrchestratorService', () => {
         spacedRepetition: [],
         adventureMode: false,
         inventory: [],
+        adventureState: {
+          mode: 'study', dungeon_map_revealed: false, current_boss: null,
+          boss_hp: 100, boss_max_hp: 100, bosses_defeated: [], loot_inventory: [],
+          total_damage_dealt: 0, current_room: 0, total_rooms: 0,
+          wall_blocks_remaining: 0, wall_blocks_total: 0, streak: 0,
+        },
         conversationSummary: '',
         messageCount: 0,
         createdAt: new Date(),

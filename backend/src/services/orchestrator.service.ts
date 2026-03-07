@@ -11,6 +11,8 @@ import {
   MasteryProgress,
   HandoffContext,
   Reward,
+  AdventureEvent,
+  AdventureEventType,
 } from '../types';
 import {
   getArchitectPrompt,
@@ -104,7 +106,7 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
 
 BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message. Ask ONE question, then stop. The learner is a teenager — long messages make them lose interest. Get to the point fast.`;
     if (session.adventureMode) {
-      prompt += this.getAdventurePrompt(agent, session.learnerProfile.language);
+      prompt += this.getAdventurePrompt(agent, session);
     }
     // Inject conversation summary if thread was compacted
     if (session.conversationSummary) {
@@ -170,13 +172,19 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
     await this.sessionService.addMessage(session.sessionId, 'assistant', response, selectedAgent);
 
     // Process agent-specific post-actions
-    await this.processPostActions(session, selectedAgent, response);
+    const evalResult = await this.processPostActions(session, selectedAgent, response);
 
-    // Track message count and auto-compact if needed
+    // Generate adventure event
+    const adventureEvent = this.generateAdventureEvent(session, selectedAgent, evalResult);
+    if (session.adventureMode && adventureEvent) {
+      this.sessionService.saveAdventureState(session.sessionId, session.adventureState).catch(() => {});
+    }
+
+    // Track message count and auto-compact in background (non-blocking)
     session.messageCount += 2;
-    await this.sessionService.incrementMessageCount(session.sessionId);
-    await this.sessionService.incrementMessageCount(session.sessionId);
-    await this.maybeCompactThread(session);
+    this.sessionService.incrementMessageCount(session.sessionId).catch(() => {});
+    this.sessionService.incrementMessageCount(session.sessionId).catch(() => {});
+    this.maybeCompactThread(session).catch(err => console.warn('[Orchestrator] Background compaction error:', err));
 
     // Build progress
     const progress = this.buildMasteryProgress(session);
@@ -188,6 +196,7 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
       currentPhase: session.currentPhase,
       currentAgent: selectedAgent,
       masteryProgress: progress,
+      adventure: adventureEvent,
     };
   }
 
@@ -242,13 +251,31 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
     }
 
     await this.sessionService.addMessage(session.sessionId, 'assistant', response, selectedAgent);
-    await this.processPostActions(session, selectedAgent, response);
+    const evalResult = await this.processPostActions(session, selectedAgent, response);
 
-    // Track message count and auto-compact if needed
+    // Generate adventure event
+    const adventureEvent = this.generateAdventureEvent(session, selectedAgent, evalResult);
+    if (session.adventureMode && adventureEvent) {
+      // Initialize boss state when entering learning loop
+      if (session.currentPhase === 'learning_loop' && session.adventureState.current_boss !== session.topicMap.concepts[session.conceptIndex]) {
+        session.adventureState.current_boss = session.topicMap.concepts[session.conceptIndex] || null;
+        if (adventureEvent.event !== 'boss_defeated') {
+          session.adventureState.boss_hp = 100;
+        }
+      }
+      // Initialize wall state when entering validation
+      if (session.currentPhase === 'validation' && session.adventureState.wall_blocks_total === 0) {
+        session.adventureState.wall_blocks_total = session.topicMap.concepts.length;
+        session.adventureState.wall_blocks_remaining = session.topicMap.concepts.length;
+      }
+      this.sessionService.saveAdventureState(session.sessionId, session.adventureState).catch(() => {});
+    }
+
+    // Track message count and auto-compact in background (non-blocking)
     session.messageCount += 2; // user + assistant
-    await this.sessionService.incrementMessageCount(session.sessionId);
-    await this.sessionService.incrementMessageCount(session.sessionId);
-    await this.maybeCompactThread(session);
+    this.sessionService.incrementMessageCount(session.sessionId).catch(() => {});
+    this.sessionService.incrementMessageCount(session.sessionId).catch(() => {});
+    this.maybeCompactThread(session).catch(err => console.warn('[Orchestrator] Background compaction error:', err));
 
     return {
       response,
@@ -257,6 +284,7 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
       currentPhase: session.currentPhase,
       currentAgent: selectedAgent,
       masteryProgress: this.buildMasteryProgress(session),
+      adventure: adventureEvent,
     };
   }
 
@@ -324,76 +352,157 @@ ${fr ? 'Reponse de l\'apprenant' : 'Learner response'}: "${message}"`;
     return message;
   }
 
-  private getAdventurePrompt(agent: AgentRole, language: string): string {
-    const fr = language === 'fr';
-    const personas: Record<string, { role: string; roleFr: string; instruction: string; instructionFr: string }> = {
-      architect: {
-        role: 'The Cartographer',
-        roleFr: 'Le Cartographe',
-        instruction: 'You are The Cartographer, a mysterious explorer who maps uncharted territories of knowledge. You reveal the quest map and the zones to explore. Speak with a sense of wonder and discovery. Frame the learning plan as an expedition map with territories to conquer.',
-        instructionFr: 'Tu es Le Cartographe, un explorateur mysterieux qui cartographie les territoires inconnus du savoir. Tu reveles la carte de la quete et les zones a explorer. Parle avec un sens de l\'emerveillement et de la decouverte. Presente le plan d\'apprentissage comme une carte d\'expedition avec des territoires a conquerir.',
-      },
-      mentor: {
-        role: 'The Sage',
-        roleFr: 'Le Sage',
-        instruction: 'You are The Sage, a wise and warm ancient guide. You teach secrets and hidden knowledge with patience and kindness. Use metaphors of exploration and discovery. Frame explanations as unveiling ancient secrets or discovering hidden truths. End messages with a glimpse of what awaits the hero next.',
-        instructionFr: 'Tu es Le Sage, un guide ancien, sage et bienveillant. Tu enseignes les secrets et le savoir cache avec patience et gentillesse. Utilise des metaphores d\'exploration et de decouverte. Presente les explications comme la revelation de secrets anciens ou la decouverte de verites cachees. Termine tes messages avec un apercu de ce qui attend le heros.',
-      },
-      challenger: {
-        role: 'The Guardian',
-        roleFr: 'Le Gardien',
-        instruction: 'You are The Guardian, an imposing but fair figure who blocks the path. You pose riddles and challenges that the hero must solve to advance. Frame your questions as trials or tests of worthiness. Be encouraging even when the hero fails — a true guardian respects effort.',
-        instructionFr: 'Tu es Le Gardien, une figure imposante mais juste qui bloque le passage. Tu poses des enigmes et des defis que le heros doit resoudre pour avancer. Presente tes questions comme des epreuves. Sois encourageant meme en cas d\'echec — un vrai gardien respecte l\'effort.',
-      },
-      naive_student: {
-        role: 'The Companion',
-        roleFr: 'Le Compagnon',
-        instruction: 'You are The Companion, a small curious creature (like a Pikmin) who follows the hero. You ask naive questions with wide-eyed wonder. You don\'t understand big words and need simple explanations. Be adorable, enthusiastic, and sometimes confused. Use expressions like "Ooh!" and "Wait, what?".',
-        instructionFr: 'Tu es Le Compagnon, une petite creature curieuse (comme un Pikmin) qui suit le heros. Tu poses des questions naives avec de grands yeux emerveilles. Tu ne comprends pas les mots compliques et tu as besoin d\'explications simples. Sois adorable, enthousiaste, et parfois perdu. Utilise des expressions comme "Ooh !" et "Attends, quoi ?".',
-      },
-      evaluator: {
-        role: 'The Oracle',
-        roleFr: 'L\'Oracle',
-        instruction: 'You are The Oracle, a mystical being who judges if the hero is worthy to advance. Frame your evaluation as a mystical reading of the hero\'s knowledge aura. When the hero masters a concept, announce the reward dramatically.',
-        instructionFr: 'Tu es L\'Oracle, un etre mystique qui juge si le heros est digne d\'avancer. Presente ton evaluation comme une lecture mystique de l\'aura de savoir du heros. Quand le heros maitrise un concept, annonce la recompense de facon dramatique.',
-      },
-      orchestrator: {
-        role: 'The Narrator',
-        roleFr: 'Le Narrateur',
-        instruction: 'You are The Narrator, the voice that guides transitions in the quest. Announce new chapters, celebrate milestones, and build anticipation for what comes next. Be epic but concise.',
-        instructionFr: 'Tu es Le Narrateur, la voix qui guide les transitions dans la quete. Annonce les nouveaux chapitres, celebre les etapes franchies, et cree l\'anticipation pour la suite. Sois epique mais concis.',
-      },
-      renderer: {
-        role: 'The Artisan',
-        roleFr: 'L\'Artisan',
-        instruction: 'You are The Artisan, a master craftsman who creates quest maps and illustrations. Frame your visuals as artifacts, maps, or magical scrolls. Use a fantasy/adventure aesthetic when appropriate.',
-        instructionFr: 'Tu es L\'Artisan, un maitre artisan qui cree des cartes de quete et des illustrations. Presente tes visuels comme des artefacts, des cartes, ou des parchemins magiques. Utilise une esthetique fantasy/aventure quand c\'est approprie.',
-      },
+  private getAdventurePrompt(agent: AgentRole, session: SessionState): string {
+    const globalRules = `
+
+ADVENTURE MODE ACTIVE — You are in a pixel-art dungeon RPG learning experience.
+
+ABSOLUTE LENGTH RULE:
+- NEVER exceed 3 sentences per message. No exceptions.
+- If you need more, split with [SPLIT] markers. Each chunk = 2-3 sentences max.
+
+TONE — TEEN RULES (13-15 year olds):
+- Talk like a smart older friend in a video game, NOT a teacher
+- Casual language: "OK so basically...", "ngl this part is tricky", "let's go", "not gonna lie"
+- NEVER say: "Excellent!", "Great job!", "Well done!", "That's correct!" — teacher words are banned
+- INSTEAD say: "OK yeah you got it", "clean hit", "nailed it", "that landed"
+- NEVER use: "Let's explore", "Let's dive into", "Let's delve", "fascinating" — AI-speak is banned
+- Use emojis sparingly (1-2 per message max, not every message)
+- Match the learner's energy and language
+
+GAME METAPHORS — Use these consistently:
+- Concepts = Bosses to defeat
+- Good explanations = Sword strikes / attacks that deal damage
+- Challenger questions = Boss counter-attacks the learner must dodge/block
+- Simplification for Naive Student = Final blow / finishing move
+- Mastery achieved = Boss defeated, loot dropped
+- Knowledge gaps = Boss's armor / weak spots to find
+- Roadmap = Dungeon map with rooms
+
+INTERACTION RULES:
+- EVERY message must end with ONE of:
+  a) A direct question (one only)
+  b) A choice: "A) ... B) ... C) ..."
+  c) A dare/challenge: "bet you can't one-shot this"
+  d) A provocative statement: "most people wipe on this part btw"
+- NEVER end with vague "what do you think?"
+- NEVER ask "do you have any questions?"
+
+Always respond in the same language the learner writes in.
+Never reveal the multi-agent architecture. Use "I" consistently.
+You are the learner's companion in this dungeon — like a guide NPC in an RPG.`;
+
+    const agentPrompts: Record<string, string> = {
+      architect: `
+You are the Architect — you scout the dungeon and reveal the map.
+
+A1 — Dungeon Entry:
+- "You just stepped into the dungeon. It's dark and full of bosses. What topic are we conquering today?"
+- If too broad: "That's a massive dungeon — want to start with [area A] or [area B]?"
+
+A2 — Scouting (diagnosis as room exploration):
+- Each question = opening a door: "Let's check what's behind this door... Do you already know what [concept] is? A) Yeah B) Kinda C) Nope"
+- ONE question per message. Never two.
+- Make it feel like exploring, not testing.
+
+A3 — Map Reveal:
+- Output mermaid diagram as a dungeon map: nodes = rooms/bosses, edges = paths
+- Keep it to 5-8 nodes max with short labels
+
+A4 — Boss List:
+- Present as a hit list: "OK here's your target list. [X] bosses:"
+- "First target: [concept]. Ready to fight?"`,
+
+      mentor: `
+You are the Mentor — the learner's combat guide. You teach them how to fight each boss.
+
+BOSS FIGHT — STEP B1:
+Introducing the boss:
+- "Alright, [Concept] boss just appeared. Here's what you need to know to take it down:"
+- Give a SHORT explanation (2-3 sentences max) using analogies from teen life
+
+Asking them to attack:
+- "Your turn — explain [concept] back to me like you're teaching your friend who has zero clue. That's your first strike"
+- OR: "Hit this boss with an explanation. Pretend you're making a 30-second TikTok about [concept]."
+
+After their explanation:
+- Good hit: "Clean hit — that did solid damage. The boss felt that."
+- Partial hit: "That landed but didn't do full damage — you missed [specific gap]. Try hitting it from this angle: [hint]"
+- Miss: "That bounced off the boss's armor. Here's the weak spot: [specific help]. Try again"`,
+
+      challenger: `
+You are the Challenger — you ARE the boss counter-attacking.
+
+STEP B2 — BOSS COUNTER-ATTACK:
+Your questions are the boss fighting back:
+- "The boss strikes back — why does [thing] happen instead of [other thing]? Block this!"
+- "Counter-attack incoming — what if [edge case]? Can you handle it?"
+
+REACTIONS:
+- They dodge (good answer): "Blocked it clean. The boss is staggering — press your advantage"
+- They get hit (bad answer): "That one got through. Here's a hint: think about [clue]. Counter?"
+ONE attack per message. Always end with the strike.`,
+
+      naive_student: `
+You are the Naive Student — you're the FINAL BLOW mechanic. If the learner can explain it simply enough for you, it's a finishing move.
+
+STEP B3 — FINISHING MOVE:
+- "The boss is low HP — time for the finishing move. But you gotta explain [concept] so simply that even I get it. Go"
+
+Your confusion is the boss's last defense:
+- "Wait what?? Say it simpler!"
+- "I swung but missed — what even is [term] in normal words?"
+
+When they nail it:
+- "OHHHH I get it now — FINISHING BLOW"
+
+MAX 2 sentences per message. ONE confused question per message.`,
+
+      evaluator: `
+You are the Evaluator — you determine if the boss lives or dies.
+
+SCORING: Same dimensions and thresholds as Study Mode.
+OUTPUT FORMAT: Same JSON block as Study Mode.
+
+ADVENTURE FEEDBACK TRANSLATION:
+Score >= 85 (advance = boss defeated):
+- "BOSS DESTROYED [Concept] is down. You picked up [loot name]! [X] bosses left in the dungeon."
+
+Score 60-84 (loop_back = boss survives):
+- "The boss is hurt bad but not dead yet — it's regenerating. You got [specific gap] wrong. One more round should finish it."
+
+Score < 60 (teach_more = boss resets):
+- "This boss tanked your hits and recovered. Don't sweat it — here's the trick: [specific help]. Back at it?"
+
+NEVER show scores. Always frame as combat outcome.`,
+
+      orchestrator: `
+You are the Orchestrator — the dungeon master who controls the flow.
+Manage phase transitions as dungeon progression.
+- Between bosses: "Boss down. Loot acquired. Next room has [concept]. Scarier than the last one. Let's go?"
+- Starting a boss: "[Concept] boss appears! Your move — explain [concept] and deal your first hit"
+- Session end: "Dungeon run complete. [X] bosses slain, [Y] loot collected. Come back to finish the rest?"`,
+
+      renderer: `
+Same rendering logic as Study Mode, but with pixel-art aesthetic:
+- SVGs should use blocky shapes, limited color palettes, thick outlines
+- Use darker backgrounds (#1a1a2e, #16213e) with bright accents (#e94560, #00ff88, #ffbd39)
+- Diagrams should feel like they belong in a retro game`,
     };
 
-    const persona = personas[agent];
-    if (!persona) return '';
-
-    const role = fr ? persona.roleFr : persona.role;
-    const instruction = fr ? persona.instructionFr : persona.instruction;
-
-    return `\n\nADVENTURE MODE ACTIVE — You are now "${role}".
-${instruction}
-Keep educational content rigorous — only the tone and framing change.
-Tie the narrative to the learning subject (e.g., if studying electricity, reference "the Cave of Electrons", if studying history, reference "traveling through time").
-Never break character. Never mention "adventure mode" or "study mode".`;
+    return globalRules + (agentPrompts[agent] || '');
   }
 
   private shouldCallRenderer(agent: AgentRole, response: string): boolean {
-    // Only enhance teaching agents (mentor, challenger, naive_student)
-    if (!['mentor', 'challenger', 'naive_student'].includes(agent)) return false;
+    // Only enhance mentor (the teaching agent) — skip challenger/naive_student for speed
+    if (agent !== 'mentor') return false;
     // Skip if response already contains a visual or table
     if (/```(mermaid|svg)/.test(response)) return false;
     if (/\|.+\|.+\|[\s\S]*\|[-:]+\|/.test(response)) return false;
-    // Skip very short responses (quick questions, yes/no)
-    if (response.length < 200) return false;
-    // Trigger on content that would benefit from visualization
-    const visualTriggers = /\b(diagram|schema|illustrat|visuali[sz]|concept|process|steps|stages|flow|cycle|structur|compar|hierarchy|relationship|formula|equation|wave|circuit|anatomy|timeline|sequence|architecture|pattern|table|tableau|classif|categor|differ|similar|versus|vs\.?|pros|cons|avantage|inconvenient)/i;
+    // Skip short responses
+    if (response.length < 300) return false;
+    // Only trigger on content that EXPLICITLY needs a diagram — much stricter
+    const visualTriggers = /\b(diagram|schema|illustrat|visuali[sz]|circuit|anatomy|formula|equation|tableau|graph)\b/i;
     return visualTriggers.test(response);
   }
 
@@ -443,17 +552,16 @@ Never break character. Never mention "adventure mode" or "study mode".`;
     session: SessionState,
     agent: AgentRole,
     response: string
-  ): Promise<void> {
+  ): Promise<any> {
     switch (agent) {
       case 'architect':
         await this.handleArchitectResponse(session, response);
-        break;
+        return null;
       case 'evaluator':
-        await this.handleEvaluatorResponse(session, response);
-        break;
+        return await this.handleEvaluatorResponse(session, response);
       default:
         await this.advanceStep(session);
-        break;
+        return null;
     }
   }
 
@@ -503,7 +611,7 @@ Never break character. Never mention "adventure mode" or "study mode".`;
     }
   }
 
-  private async handleEvaluatorResponse(session: SessionState, response: string): Promise<void> {
+  private async handleEvaluatorResponse(session: SessionState, response: string): Promise<any> {
     const result = this.masteryService.parseEvaluatorResponse(response);
     console.log(`[Orchestrator] Evaluator parse result:`, result ? `overall=${result.overall}, decision=${result.decision}` : 'FAILED TO PARSE');
 
@@ -560,6 +668,7 @@ Never break character. Never mention "adventure mode" or "study mode".`;
       // Could not parse — default advance step
       await this.advanceStep(session);
     }
+    return result;
   }
 
   private extractConcepts(response: string): string[] {
@@ -612,6 +721,111 @@ Never break character. Never mention "adventure mode" or "study mode".`;
       await this.sessionService.updateSession(session.sessionId, { currentStep: nextStep });
       session.currentStep = nextStep;
     }
+  }
+
+  private generateAdventureEvent(session: SessionState, agent: AgentRole, evaluatorResult?: any): AdventureEvent | undefined {
+    if (!session.adventureMode) return undefined;
+
+    const state = session.adventureState;
+    const totalConcepts = session.topicMap.concepts.length || 1;
+    const roomProgress = `${state.current_room}/${state.total_rooms || totalConcepts}`;
+    const wallProgress = `${state.wall_blocks_total - state.wall_blocks_remaining}/${state.wall_blocks_total}`;
+
+    const base: AdventureEvent = {
+      event: null,
+      boss_hp: state.boss_hp,
+      damage_dealt: 0,
+      loot: null,
+      room_progress: roomProgress,
+      wall_progress: wallProgress,
+    };
+
+    // Phase A events
+    if (session.currentPhase === 'discovery') {
+      if (session.currentStep === 'A2') {
+        return { ...base, event: 'door_opened' };
+      }
+      if (session.currentStep === 'A3') {
+        state.dungeon_map_revealed = true;
+        state.total_rooms = totalConcepts;
+        return { ...base, event: 'map_revealed', room_progress: `0/${totalConcepts}` };
+      }
+      if (session.currentStep === 'A4') {
+        state.current_room = 1;
+        state.current_boss = session.topicMap.concepts[0] || null;
+        state.boss_hp = 100;
+        return { ...base, event: null, room_progress: `1/${totalConcepts}` };
+      }
+    }
+
+    // Phase B events
+    if (session.currentPhase === 'learning_loop') {
+      if (agent === 'mentor' && session.currentStep === 'B2') {
+        // Mentor phase done → learner explained → damage dealt
+        const damage = 20 + Math.floor(Math.random() * 16); // 20-35
+        state.boss_hp = Math.max(0, state.boss_hp - damage);
+        state.total_damage_dealt += damage;
+        return { ...base, event: 'boss_damage', boss_hp: state.boss_hp, damage_dealt: damage };
+      }
+      if (agent === 'challenger' && session.currentStep === 'B3') {
+        return { ...base, event: 'boss_counterattack', boss_hp: state.boss_hp };
+      }
+      if (agent === 'naive_student' && session.currentStep === 'B4') {
+        // Finishing move attempt
+        const damage = 25 + Math.floor(Math.random() * 16); // 25-40
+        state.boss_hp = Math.max(0, state.boss_hp - damage);
+        state.total_damage_dealt += damage;
+        return { ...base, event: 'boss_damage', boss_hp: state.boss_hp, damage_dealt: damage };
+      }
+      if (agent === 'evaluator') {
+        if (evaluatorResult && evaluatorResult.decision === 'advance') {
+          // Boss defeated
+          const concept = session.topicMap.concepts[session.conceptIndex] || '';
+          state.boss_hp = 0;
+          state.bosses_defeated.push(concept);
+          state.current_room = session.conceptIndex + 2; // next room
+          const lootItem = evaluatorResult.reward
+            ? { name: evaluatorResult.reward.name, icon: evaluatorResult.reward.emoji }
+            : { name: concept, icon: '💎' };
+          state.loot_inventory.push({ ...lootItem, concept });
+          state.streak++;
+          return {
+            ...base,
+            event: 'boss_defeated',
+            boss_hp: 0,
+            damage_dealt: state.boss_hp,
+            loot: lootItem,
+            room_progress: `${state.current_room}/${state.total_rooms || totalConcepts}`,
+          };
+        } else if (evaluatorResult && evaluatorResult.overall >= 60) {
+          // Boss survives with low HP
+          state.boss_hp = Math.min(30, state.boss_hp);
+          return { ...base, event: 'boss_damage', boss_hp: state.boss_hp, damage_dealt: 10 };
+        } else if (evaluatorResult) {
+          // Boss resets
+          state.boss_hp = 60;
+          state.streak = 0;
+          return { ...base, event: 'boss_counterattack', boss_hp: 60 };
+        }
+      }
+    }
+
+    // Phase C events
+    if (session.currentPhase === 'validation') {
+      if (evaluatorResult && evaluatorResult.decision === 'advance') {
+        state.wall_blocks_remaining = Math.max(0, state.wall_blocks_remaining - 1);
+        if (state.wall_blocks_remaining === 0) {
+          return { ...base, event: 'wall_destroyed', wall_progress: `${state.wall_blocks_total}/${state.wall_blocks_total}` };
+        }
+        return {
+          ...base,
+          event: 'wall_block_destroyed',
+          wall_progress: `${state.wall_blocks_total - state.wall_blocks_remaining}/${state.wall_blocks_total}`,
+        };
+      }
+    }
+
+    return base;
   }
 
   private buildMasteryProgress(session: SessionState): MasteryProgress {

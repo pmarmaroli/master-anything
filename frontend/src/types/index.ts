@@ -24,6 +24,26 @@ export interface Reward {
   concept: string;
 }
 
+export type AdventureEventType =
+  | 'boss_damage'
+  | 'boss_defeated'
+  | 'boss_counterattack'
+  | 'door_opened'
+  | 'map_revealed'
+  | 'wall_block_destroyed'
+  | 'wall_destroyed'
+  | 'loot_drop'
+  | null;
+
+export interface AdventureEvent {
+  event: AdventureEventType;
+  boss_hp: number;
+  damage_dealt: number;
+  loot: { name: string; icon: string } | null;
+  room_progress: string;
+  wall_progress: string;
+}
+
 export interface MasteryProgress {
   currentPhase: LearningPhase;
   currentStep: string;
@@ -54,5 +74,6 @@ export interface SSEEvent {
   currentPhase?: LearningPhase;
   currentAgent?: AgentRole;
   masteryProgress?: MasteryProgress;
+  adventure?: AdventureEvent;
   error?: string;
 }

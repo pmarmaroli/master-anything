@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Adventure mode theme */
+.adventure-mode {
+  font-family: 'Press Start 2P', cursive;
+  background: #0f0f23 !important;
+  background-image: radial-gradient(circle, #1a1a2e 1px, transparent 1px) !important;
+  background-size: 16px 16px !important;
+}
+
+/* Header in adventure mode */
+.adventure-mode .adventure-header {
+  background: #1a1a2e !important;
+  border-color: #2a2a4a !important;
+  border-bottom-width: 3px;
+}
+
+/* Chat area */
+.adventure-mode .adventure-chat {
+  background: transparent !important;
+}
+
+/* Message bubbles */
+.adventure-mode .adventure-bubble-user {
+  background: #1e3a5f !important;
+  border-color: #0096ff !important;
+  color: #e0e0e0 !important;
+  border-radius: 2px !important;
+  box-shadow: 3px 3px 0px #000 !important;
+  border-width: 2px !important;
+}
+
+.adventure-mode .adventure-bubble-bot {
+  background: #2a1a3e !important;
+  border-color: #8b5cf6 !important;
+  color: #e0e0e0 !important;
+  border-radius: 2px !important;
+  box-shadow: 3px 3px 0px #000 !important;
+  border-width: 2px !important;
+}
+
+/* Avatar in adventure mode */
+.adventure-mode .adventure-avatar-user {
+  background: #1e3a5f !important;
+  border-color: #0096ff !important;
+  border-radius: 2px !important;
+}
+
+.adventure-mode .adventure-avatar-bot {
+  background: #2a1a3e !important;
+  border-color: #8b5cf6 !important;
+  border-radius: 2px !important;
+}
+
+/* Input area */
+.adventure-mode .adventure-input-area {
+  background: #1a1a2e !important;
+  border-color: #2a2a4a !important;
+}
+
+.adventure-mode .adventure-input {
+  background: #0f0f23 !important;
+  border-color: #2a2a4a !important;
+  color: #e0e0e0 !important;
+  border-radius: 2px !important;
+  border-width: 2px !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 10px !important;
+}
+
+.adventure-mode .adventure-input::placeholder {
+  color: #6a6a8a !important;
+}
+
+/* Send button */
+.adventure-mode .adventure-send-btn {
+  background: #e94560 !important;
+  border-radius: 2px !important;
+  box-shadow: 3px 3px 0px #000 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 9px !important;
+}
+
+.adventure-mode .adventure-send-btn:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: none !important;
+}
+
+/* Quick reply buttons */
+.adventure-mode .adventure-quick-reply {
+  background: #1a1a2e !important;
+  border: 2px solid #e94560 !important;
+  color: #e0e0e0 !important;
+  border-radius: 2px !important;
+  box-shadow: 2px 2px 0px #000 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 8px !important;
+}
+
+.adventure-mode .adventure-quick-reply:hover {
+  background: #e94560 !important;
+}
+
+.adventure-mode .adventure-quick-reply:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: none !important;
+}
+
+/* Mode toggle styled as pixel switch */
+.adventure-mode .adventure-toggle {
+  background: #e94560 !important;
+  border-radius: 2px !important;
+  box-shadow: 2px 2px 0px #000 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 8px !important;
+}
+
+/* Scrollbar */
+.adventure-mode ::-webkit-scrollbar {
+  width: 8px;
+}
+.adventure-mode ::-webkit-scrollbar-track {
+  background: #0f0f23;
+}
+.adventure-mode ::-webkit-scrollbar-thumb {
+  background: #2a2a4a;
+}
+.adventure-mode ::-webkit-scrollbar-thumb:hover {
+  background: #e94560;
+}
+
+/* Welcome screen in adventure mode */
+.adventure-mode .adventure-welcome h2 {
+  color: #e0e0e0 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 14px !important;
+}
+
+.adventure-mode .adventure-welcome p {
+  color: #6a6a8a !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 8px !important;
+  line-height: 1.8 !important;
+}
+
+.adventure-mode .adventure-welcome button {
+  background: #1a1a2e !important;
+  border: 2px solid #2a2a4a !important;
+  color: #e0e0e0 !important;
+  border-radius: 2px !important;
+  box-shadow: 3px 3px 0px #000 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 8px !important;
+}
+
+.adventure-mode .adventure-welcome button:hover {
+  border-color: #e94560 !important;
+}
+
+.adventure-mode .adventure-welcome button:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: none !important;
+}
+
+/* Markdown text sizing in adventure */
+.adventure-mode .adventure-bubble-bot p,
+.adventure-mode .adventure-bubble-bot li {
+  font-size: 10px !important;
+  line-height: 1.8 !important;
+}
+
+.adventure-mode .adventure-bubble-user p {
+  font-size: 10px !important;
+  line-height: 1.8 !important;
+}
+
+/* Loading dots in adventure mode */
+.adventure-mode .adventure-dots div {
+  background: #e94560 !important;
+  border-radius: 0 !important;
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes shatter {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(0.95) translateY(5px); opacity: 0; }
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+
+@keyframes loot-rise {
+  0% { transform: translateY(60px) scale(0.5); opacity: 0; }
+  40% { transform: translateY(-10px) scale(1.1); opacity: 1; }
+  60% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 0; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+@keyframes block-explode {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3) rotate(5deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(15deg); opacity: 0; }
+}
+
+@keyframes pulse-quick {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+@keyframes vignette-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(233, 69, 96, 0); }
+  50% { box-shadow: inset 0 0 80px 20px rgba(233, 69, 96, 0.3); }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes pixel-entrance {
+  0% { transform: translateX(-20px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-shatter { animation: shatter 1.5s ease-out forwards; }
+.animate-float-up { animation: float-up 1s ease-out forwards; }
+.animate-loot-rise { animation: loot-rise 2.5s ease-out forwards; }
+.animate-sparkle { animation: sparkle 0.6s ease-in-out infinite; }
+.animate-block-explode { animation: block-explode 0.8s ease-out forwards; }
+.animate-pulse-quick { animation: pulse-quick 0.4s ease-in-out; }
+.animate-vignette { animation: vignette-pulse 0.3s ease-in-out; }
+.animate-pixel-enter { animation: pixel-entrance 0.2s steps(4) forwards; }
+
+/* Confetti burst */
+.confetti-particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  animation: confetti-fall 1.5s ease-in forwards;
+  z-index: 100;
+}
+
+/* Message split entrance */
+.adventure-mode .split-bubble {
+  animation: pixel-entrance 0.2s steps(4) forwards;
+}
+
+/* Counter-attack vignette overlay */
+.counterattack-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  animation: vignette-pulse 0.3s ease-in-out forwards;
+}

@@ -11,7 +11,26 @@ import {
   Reward,
   LearningPhase,
   LearningStep,
+  AdventureState,
 } from '../types';
+
+function defaultAdventureState(): AdventureState {
+  return {
+    mode: 'study',
+    dungeon_map_revealed: false,
+    current_boss: null,
+    boss_hp: 100,
+    boss_max_hp: 100,
+    bosses_defeated: [],
+    loot_inventory: [],
+    total_damage_dealt: 0,
+    current_room: 0,
+    total_rooms: 0,
+    wall_blocks_remaining: 0,
+    wall_blocks_total: 0,
+    streak: 0,
+  };
+}
 
 export class SessionService {
   async createSession(language: string = 'en'): Promise<SessionState> {
@@ -61,6 +80,7 @@ export class SessionService {
       spacedRepetition: [],
       adventureMode: false,
       inventory: [],
+      adventureState: defaultAdventureState(),
       conversationSummary: '',
       messageCount: 0,
       createdAt: new Date(),
@@ -138,6 +158,7 @@ export class SessionService {
       spacedRepetition,
       adventureMode: row.adventure_mode === true || row.adventure_mode === 1,
       inventory: JSON.parse(row.inventory || '[]'),
+      adventureState: JSON.parse(row.adventure_state || 'null') || defaultAdventureState(),
       conversationSummary: row.conversation_summary || '',
       messageCount: row.message_count || 0,
       createdAt: row.created_at,
@@ -177,6 +198,14 @@ export class SessionService {
     await request.query(
       `UPDATE sessions SET ${setClauses.join(', ')} WHERE session_id = @sessionId`
     );
+  }
+
+  async saveAdventureState(sessionId: string, state: AdventureState): Promise<void> {
+    const pool = await getPool();
+    await pool.request()
+      .input('sessionId', sessionId)
+      .input('adventureState', JSON.stringify(state))
+      .query(`UPDATE sessions SET adventure_state = @adventureState WHERE session_id = @sessionId`);
   }
 
   async saveInventory(sessionId: string, inventory: Reward[]): Promise<void> {

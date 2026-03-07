@@ -1,4 +1,4 @@
-import { LearningPhase, AgentRole, ConceptScore, Reward } from './agents';
+import { LearningPhase, AgentRole, ConceptScore, Reward, AdventureEvent } from './agents';
 
 export interface MasteryRequest {
   message: string;
@@ -33,6 +33,7 @@ export interface MasteryResponse {
   currentPhase: LearningPhase;
   currentAgent: AgentRole;
   masteryProgress: MasteryProgress;
+  adventure?: AdventureEvent;
 }
 
 export interface SessionRecoveryResponse {
