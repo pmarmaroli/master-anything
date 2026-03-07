@@ -16,15 +16,17 @@ export function RoundTimer({ active, language }: RoundTimerProps) {
       setSeconds(0);
       setShowWarning(false);
       setWarningDismissed(false);
-      intervalRef.current = setInterval(() => {
+      const id = setInterval(() => {
         setSeconds(s => s + 1);
       }, 1000);
+      intervalRef.current = id;
+      return () => clearInterval(id);
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setSeconds(0);
       setShowWarning(false);
+      return undefined;
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [active]);
 
   useEffect(() => {
