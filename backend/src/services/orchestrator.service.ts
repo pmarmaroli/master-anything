@@ -107,6 +107,14 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
 BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message. Ask ONE question, then stop. The learner is a teenager — long messages make them lose interest. Get to the point fast.`;
     if (session.adventureMode) {
       prompt += this.getAdventurePrompt(agent, session);
+      // Repeat brevity rule at the very end — LLMs give more weight to last instructions
+      prompt += `
+
+=== FINAL MANDATORY RULE ===
+YOUR RESPONSE MUST BE 2-3 SENTENCES MAXIMUM. STOP AFTER ONE QUESTION OR CHOICE.
+DO NOT combine a reaction + explanation + question in the same message.
+If you want to say more, use [SPLIT] to break into separate short messages.
+THIS IS THE MOST IMPORTANT RULE. VIOLATING IT BREAKS THE GAME.`;
     }
     // Inject conversation summary if thread was compacted
     if (session.conversationSummary) {
@@ -174,9 +182,24 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
     // Process agent-specific post-actions
     const evalResult = await this.processPostActions(session, selectedAgent, response);
 
+    // Initialize adventure state before event generation
+    if (session.adventureMode) {
+      if (session.currentPhase === 'learning_loop' && session.adventureState.current_boss !== session.topicMap.concepts[session.conceptIndex]) {
+        session.adventureState.current_boss = session.topicMap.concepts[session.conceptIndex] || null;
+        session.adventureState.boss_hp = 100;
+      }
+      if (session.currentPhase === 'validation' && session.adventureState.wall_blocks_total === 0) {
+        session.adventureState.wall_blocks_total = session.topicMap.concepts.length;
+        session.adventureState.wall_blocks_remaining = session.topicMap.concepts.length;
+      }
+      if (session.adventureState.total_rooms === 0 && session.topicMap.concepts.length > 0) {
+        session.adventureState.total_rooms = session.topicMap.concepts.length;
+      }
+    }
+
     // Generate adventure event
     const adventureEvent = this.generateAdventureEvent(session, selectedAgent, evalResult);
-    if (session.adventureMode && adventureEvent) {
+    if (session.adventureMode) {
       this.sessionService.saveAdventureState(session.sessionId, session.adventureState).catch(() => {});
     }
 
@@ -253,21 +276,27 @@ BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message.
     await this.sessionService.addMessage(session.sessionId, 'assistant', response, selectedAgent);
     const evalResult = await this.processPostActions(session, selectedAgent, response);
 
-    // Generate adventure event
-    const adventureEvent = this.generateAdventureEvent(session, selectedAgent, evalResult);
-    if (session.adventureMode && adventureEvent) {
-      // Initialize boss state when entering learning loop
+    // Initialize adventure state before event generation
+    if (session.adventureMode) {
+      // Initialize boss state when entering learning loop with a new concept
       if (session.currentPhase === 'learning_loop' && session.adventureState.current_boss !== session.topicMap.concepts[session.conceptIndex]) {
         session.adventureState.current_boss = session.topicMap.concepts[session.conceptIndex] || null;
-        if (adventureEvent.event !== 'boss_defeated') {
-          session.adventureState.boss_hp = 100;
-        }
+        session.adventureState.boss_hp = 100;
       }
       // Initialize wall state when entering validation
       if (session.currentPhase === 'validation' && session.adventureState.wall_blocks_total === 0) {
         session.adventureState.wall_blocks_total = session.topicMap.concepts.length;
         session.adventureState.wall_blocks_remaining = session.topicMap.concepts.length;
       }
+      // Set total rooms from concepts
+      if (session.adventureState.total_rooms === 0 && session.topicMap.concepts.length > 0) {
+        session.adventureState.total_rooms = session.topicMap.concepts.length;
+      }
+    }
+
+    // Generate adventure event
+    const adventureEvent = this.generateAdventureEvent(session, selectedAgent, evalResult);
+    if (session.adventureMode) {
       this.sessionService.saveAdventureState(session.sessionId, session.adventureState).catch(() => {});
     }
 
