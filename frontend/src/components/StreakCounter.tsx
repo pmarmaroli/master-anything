@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
+import { playStreak } from '../utils/sounds';
 
 interface StreakCounterProps {
   streak: number;
+  onMilestone?: () => void;
 }
 
-export function StreakCounter({ streak }: StreakCounterProps) {
+export function StreakCounter({ streak, onMilestone }: StreakCounterProps) {
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     if (streak > 0) {
       setPulse(true);
+      playStreak();
       const t = setTimeout(() => setPulse(false), 400);
+
+      // Milestone check
+      if (streak === 5 || streak === 10 || streak === 15) {
+        onMilestone?.();
+      }
+
       return () => clearTimeout(t);
     }
-  }, [streak]);
+  }, [streak, onMilestone]);
 
   if (streak === 0) return null;
 
@@ -26,7 +35,7 @@ export function StreakCounter({ streak }: StreakCounterProps) {
         color: '#ffbd39',
       }}
     >
-      <span>x{streak}</span>
+      <span>\uD83D\uDD25 {streak}</span>
     </div>
   );
 }

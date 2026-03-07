@@ -139,6 +139,27 @@ function MarkdownContent({ content, adventureMode }: { content: string; adventur
   );
 }
 
+function SplitBubble({ content, delay, adventureMode }: { content: string; delay: number; adventureMode?: boolean }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), delay);
+    return () => clearTimeout(t);
+  }, [delay]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className={`max-w-[85%] sm:max-w-[75%] px-4 py-3 overflow-x-auto ${
+        adventureMode ? 'adventure-bubble-bot split-bubble' : 'rounded-2xl shadow-sm bg-white border-2 border-emerald-200 text-gray-800'
+      }`}
+    >
+      <MarkdownContent content={content} adventureMode={adventureMode} />
+    </div>
+  );
+}
+
 export function ChatArea({ messages, isLoading, onSend, listeningMode, language, onLanguageChange, adventureMode }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastSpokenRef = useRef<string>('');
@@ -252,20 +273,12 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
     );
   }
 
-  // Split messages with [SPLIT] markers into multiple bubbles
+  // Split messages with [SPLIT] markers into multiple bubbles with staggered reveal
   const renderAssistantContent = (content: string, messageId: string) => {
     if (adventureMode && content.includes('[SPLIT]')) {
       const parts = content.split('[SPLIT]').map(s => s.trim()).filter(Boolean);
       return parts.map((part, i) => (
-        <div
-          key={`${messageId}-split-${i}`}
-          className={`max-w-[85%] sm:max-w-[75%] px-4 py-3 overflow-x-auto ${
-            adventureMode ? 'adventure-bubble-bot split-bubble' : 'rounded-2xl shadow-sm bg-white border-2 border-emerald-200 text-gray-800'
-          }`}
-          style={adventureMode ? { animationDelay: `${i * 0.4}s` } : undefined}
-        >
-          <MarkdownContent content={part} adventureMode={adventureMode} />
-        </div>
+        <SplitBubble key={`${messageId}-split-${i}`} content={part} delay={i * 500} adventureMode={adventureMode} />
       ));
     }
     return [

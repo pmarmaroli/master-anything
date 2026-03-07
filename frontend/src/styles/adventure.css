@@ -180,6 +180,50 @@
   border-radius: 0 !important;
 }
 
+/* Mermaid dungeon map styling */
+.adventure-mode .mermaid-container {
+  background: #0f0f23 !important;
+  border: 2px solid #2a2a4a !important;
+  border-radius: 2px !important;
+  padding: 8px !important;
+}
+
+.adventure-mode .mermaid-container svg {
+  background: #0f0f23 !important;
+}
+
+/* Override mermaid node colors for dungeon map look */
+.adventure-mode .mermaid-container .node rect,
+.adventure-mode .mermaid-container .node polygon,
+.adventure-mode .mermaid-container .node circle {
+  fill: #1a1a2e !important;
+  stroke: #ffbd39 !important;
+  stroke-width: 2px !important;
+}
+
+.adventure-mode .mermaid-container .node .label {
+  color: #e0e0e0 !important;
+  fill: #e0e0e0 !important;
+}
+
+.adventure-mode .mermaid-container .edgePath path {
+  stroke: #2a2a4a !important;
+  stroke-dasharray: 5 3 !important;
+  stroke-width: 2px !important;
+}
+
+.adventure-mode .mermaid-container .edgeLabel {
+  color: #6a6a8a !important;
+  fill: #6a6a8a !important;
+  background: #0f0f23 !important;
+}
+
+.adventure-mode .mermaid-container text {
+  fill: #e0e0e0 !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 9px !important;
+}
+
 /* ===== ANIMATIONS ===== */
 
 @keyframes shake {

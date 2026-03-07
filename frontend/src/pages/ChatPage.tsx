@@ -13,6 +13,7 @@ import { BossHPBar } from '../components/BossHPBar';
 import { WallDemolition } from '../components/WallDemolition';
 import { LootDrop } from '../components/LootDrop';
 import { StreakCounter } from '../components/StreakCounter';
+import { PixelConfetti } from '../components/PixelConfetti';
 import { setSoundEnabled, playBossDamage, playBossDefeated, playLootDrop, playCounterattack, playWallBlock } from '../utils/sounds';
 import '../styles/adventure.css';
 
@@ -26,6 +27,8 @@ export function ChatPage() {
   const [soundOn, setSoundOn] = useState(false);
   const [showCounterattack, setShowCounterattack] = useState(false);
   const [showLoot, setShowLoot] = useState(false);
+  const [showScreenFlash, setShowScreenFlash] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [streak, setStreak] = useState(0);
 
   const handleDismissBadge = useCallback(() => setMasteryBadgeConcept(null), []);
@@ -47,7 +50,9 @@ export function ChatPage() {
     } else if (ev === 'boss_defeated') {
       playBossDefeated();
       setShowLoot(true);
+      setShowScreenFlash(true);
       setTimeout(() => setShowLoot(false), 2500);
+      setTimeout(() => setShowScreenFlash(false), 200);
       setStreak(s => s + 1);
     } else if (ev === 'boss_counterattack') {
       playCounterattack();
@@ -74,8 +79,14 @@ export function ChatPage() {
         ? 'adventure-mode'
         : 'bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50'
     }`}>
+      {/* Screen flash on boss defeated */}
+      {showScreenFlash && <div className="fixed inset-0 bg-white/50 pointer-events-none z-50" />}
+
       {/* Counter-attack vignette */}
       {showCounterattack && <div className="counterattack-vignette" />}
+
+      {/* Confetti on streak milestones */}
+      <PixelConfetti show={showConfetti} />
 
       {/* Loot drop overlay */}
       <LootDrop loot={lastAdventureEvent?.loot || null} show={showLoot} />
@@ -108,7 +119,7 @@ export function ChatPage() {
           {progress && !adventureMode && (
             <PhaseIndicator phase={progress.currentPhase} step={progress.currentStep} />
           )}
-          {adventureMode && <StreakCounter streak={streak} />}
+          {adventureMode && <StreakCounter streak={streak} onMilestone={() => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 1800); }} />}
         </div>
         <div className="flex items-center gap-3">
           {progress?.currentConcept && !adventureMode && (

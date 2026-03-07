@@ -53,5 +53,5 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     );
   }
 
-  return <div ref={containerRef} className="my-4 flex justify-center" />;
+  return <div ref={containerRef} className="my-4 flex justify-center mermaid-container" />;
 }
