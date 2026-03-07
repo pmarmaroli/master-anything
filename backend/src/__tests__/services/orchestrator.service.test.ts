@@ -69,4 +69,42 @@ describe('OrchestratorService', () => {
       expect(service.selectAgent(makeSession({ currentPhase: 'validation', currentStep: 'C1' }))).toBe('evaluator');
     });
   });
+
+  describe('shouldCallRenderer', () => {
+    const service = new OrchestratorService() as any;
+
+    it('returns false for non-mentor agents', () => {
+      const longResponse = 'A long response about circuits and diagrams with content. '.repeat(10);
+      expect(service.shouldCallRenderer('architect', longResponse)).toBe(false);
+      expect(service.shouldCallRenderer('challenger', longResponse)).toBe(false);
+    });
+
+    it('returns false if response already has a mermaid block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Content\n```mermaid\ngraph TD\n```')).toBe(false);
+    });
+
+    it('returns false if response already has an svg block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Content\n```svg\n<svg></svg>\n```')).toBe(false);
+    });
+
+    it('returns false if response already has a jsxgraph block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Graph:\n```jsxgraph\nvar board = JXG.JSXGraph.initBoard(...);\n```')).toBe(false);
+    });
+
+    it('returns false if response already has a circuit block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Circuit:\n```circuit\n{"components":[]}\n```')).toBe(false);
+    });
+
+    it('returns false if response already has a kekule block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Molecule:\n```kekule\nCCO\n```')).toBe(false);
+    });
+
+    it('returns false if response already has a matterjs block', () => {
+      expect(service.shouldCallRenderer('mentor', 'Physics:\n```matterjs\nvar engine = Matter.Engine.create();\n```')).toBe(false);
+    });
+
+    it('returns false if response is too short', () => {
+      expect(service.shouldCallRenderer('mentor', 'Short response with circuit diagram.')).toBe(false);
+    });
+  });
 });

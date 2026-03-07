@@ -525,7 +525,7 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
     // Only enhance mentor (the teaching agent) — skip challenger/naive_student for speed
     if (agent !== 'mentor') return false;
     // Skip if response already contains a visual or table
-    if (/```(mermaid|svg)/.test(response)) return false;
+    if (/```(mermaid|svg|jsxgraph|circuit|kekule|matterjs)/.test(response)) return false;
     if (/\|.+\|.+\|[\s\S]*\|[-:]+\|/.test(response)) return false;
     // Skip short responses
     if (response.length < 300) return false;
@@ -543,7 +543,7 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
 
     try {
       const rendererPrompt = this.getSystemPrompt('renderer', session);
-      const rendererInput = `Based on this educational content, create an appropriate visual (mermaid or SVG):\n\n${primaryResponse.slice(0, 2000)}`;
+      const rendererInput = `Based on this educational content, create an appropriate visual using the correct library format:\n- jsxgraph: geometry, math, functions, calculus, optics\n- circuit JSON: electronics, circuits, logic gates\n- kekule (SMILES string): chemistry molecules and structures\n- matterjs: physics simulations (gravity, pendulum, springs)\n- mermaid: flowcharts, timelines, mind maps\n\nContent:\n${primaryResponse.slice(0, 2000)}`;
 
       let rendererResponse: string;
       if (onToken) {
