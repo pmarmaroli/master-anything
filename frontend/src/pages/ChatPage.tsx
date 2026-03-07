@@ -14,6 +14,7 @@ import { WallDemolition } from '../components/WallDemolition';
 import { LootDrop } from '../components/LootDrop';
 import { StreakCounter } from '../components/StreakCounter';
 import { PixelConfetti } from '../components/PixelConfetti';
+import { RoundTimer } from '../components/RoundTimer';
 import { setSoundEnabled, playBossDamage, playBossDefeated, playLootDrop, playCounterattack, playWallBlock } from '../utils/sounds';
 import '../styles/adventure.css';
 
@@ -249,6 +250,9 @@ export function ChatPage() {
         show={!!masteryBadgeConcept}
         onDismiss={handleDismissBadge}
       />
+
+      {/* Round timer — adventure mode boss fights only */}
+      <RoundTimer active={!!showBossBar} language={language} />
     </div>
   );
 }
