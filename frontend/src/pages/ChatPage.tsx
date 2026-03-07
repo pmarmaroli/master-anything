@@ -192,13 +192,18 @@ export function ChatPage() {
           bossesSlain={Object.values(progress?.conceptScores || {}).filter(s => s.overall >= 85).length}
         />
       )}
-      {showWall && (
-        <WallDemolition
-          totalBlocks={progress?.totalConcepts || 0}
-          blocksRemaining={parseInt(lastAdventureEvent?.wall_progress?.split('/')[0] || '0')}
-          event={lastAdventureEvent}
-        />
-      )}
+      {showWall && (() => {
+        const parts = (lastAdventureEvent?.wall_progress || '0/0').split('/');
+        const destroyed = parseInt(parts[0] || '0');
+        const total = parseInt(parts[1] || '0') || progress?.totalConcepts || 0;
+        return (
+          <WallDemolition
+            totalBlocks={total}
+            blocksRemaining={total - destroyed}
+            event={lastAdventureEvent}
+          />
+        );
+      })()}
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
@@ -234,6 +239,7 @@ export function ChatPage() {
         onClose={() => setShowInventory(false)}
         inventory={progress?.inventory || []}
         language={language}
+        adventureMode={adventureMode}
       />
 
       {/* Mastery celebration overlay */}
