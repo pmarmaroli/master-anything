@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import type { ChatMessage } from '../types';
 import { MermaidDiagram } from './MermaidDiagram';
+import { JSXGraphRenderer } from './JSXGraphRenderer';
 import { playButtonPress } from '../utils/sounds';
 
 interface ChatAreaProps {
@@ -123,6 +124,9 @@ function MarkdownContent({ content, adventureMode }: { content: string; adventur
                 dangerouslySetInnerHTML={{ __html: text }}
               />
             );
+          }
+          if (/language-jsxgraph/.test(className || '')) {
+            return <JSXGraphRenderer code={text} />;
           }
           return (
             <code className={`${className} ${adventureMode ? 'bg-[#2a2a4a] text-[#00ff88]' : 'bg-amber-100'} rounded px-1 py-0.5 text-sm`}>
