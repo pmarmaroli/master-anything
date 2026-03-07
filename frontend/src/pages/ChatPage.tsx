@@ -209,7 +209,7 @@ export function ChatPage() {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Chat column */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           <ChatArea
             messages={messages}
             isLoading={isLoading}
