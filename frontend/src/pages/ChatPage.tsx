@@ -49,6 +49,7 @@ export function ChatPage() {
       playBossDamage();
     } else if (ev === 'boss_defeated') {
       playBossDefeated();
+      setTimeout(() => playLootDrop(), 600); // loot sound after victory jingle
       setShowLoot(true);
       setShowScreenFlash(true);
       setTimeout(() => setShowLoot(false), 2500);
