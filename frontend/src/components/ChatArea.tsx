@@ -7,6 +7,9 @@ import 'katex/dist/katex.min.css';
 import type { ChatMessage } from '../types';
 import { MermaidDiagram } from './MermaidDiagram';
 import { JSXGraphRenderer } from './JSXGraphRenderer';
+import { CircuitRenderer } from './CircuitRenderer';
+import { KekuleRenderer } from './KekuleRenderer';
+import { MatterJSRenderer } from './MatterJSRenderer';
 import { playButtonPress } from '../utils/sounds';
 
 interface ChatAreaProps {
@@ -127,6 +130,15 @@ function MarkdownContent({ content, adventureMode }: { content: string; adventur
           }
           if (/language-jsxgraph/.test(className || '')) {
             return <JSXGraphRenderer code={text} />;
+          }
+          if (/language-circuit/.test(className || '')) {
+            return <CircuitRenderer code={text} />;
+          }
+          if (/language-kekule/.test(className || '')) {
+            return <KekuleRenderer code={text} />;
+          }
+          if (/language-matterjs/.test(className || '')) {
+            return <MatterJSRenderer code={text} />;
           }
           return (
             <code className={`${className} ${adventureMode ? 'bg-[#2a2a4a] text-[#00ff88]' : 'bg-amber-100'} rounded px-1 py-0.5 text-sm`}>
