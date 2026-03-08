@@ -67,13 +67,6 @@ function SpeakButton({ text, language }: { text: string; language?: string | nul
   );
 }
 
-function stripChoiceLines(content: string): string {
-  return content
-    .split('\n')
-    .filter(line => !/^\s*\**[A-Da-d1-4][)\.]\**\s*.+/.test(line))
-    .join('\n')
-    .trim();
-}
 
 function extractQuickReplies(content: string, language?: string | null): string[] {
   const abcMatch = content.match(/(?:^|\n)\s*\**[A-Da-d1-4][)\.]\**\s*(.+)/g);
@@ -348,10 +341,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
             {/* Bubble(s) */}
             {isSplit ? (
               <div className="flex flex-col gap-2 max-w-[85%] sm:max-w-[75%]">
-                {renderAssistantContent(
-                  message.id === lastMessage?.id && quickReplies.some(r => /^[A-D]$/.test(r)) ? stripChoiceLines(message.content) : message.content,
-                  message.id
-                )}
+                {renderAssistantContent(message.content, message.id)}
               </div>
             ) : (
               <div
@@ -375,7 +365,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                 ) : message.role === 'assistant' ? (
                   <>
                     <MarkdownContent
-                      content={message.id === lastMessage?.id && quickReplies.some(r => /^[A-D]$/.test(r)) ? stripChoiceLines(message.content) : message.content}
+                      content={message.content}
                       adventureMode={adventureMode}
                     />
                     {!listeningMode && !adventureMode && <SpeakButton text={message.content} language={language} />}
