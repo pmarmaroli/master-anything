@@ -165,7 +165,17 @@ THIS IS THE MOST IMPORTANT RULE. VIOLATING IT BREAKS THE GAME.`;
     await this.sessionService.addMessage(session.sessionId, 'user', message, null);
 
     // Select agent and get system prompt
-    const selectedAgent = this.selectAgent(session);
+    let selectedAgent = this.selectAgent(session);
+
+    // If the user is responding to a lettered choice menu, route back to mentor
+    // instead of the next pipeline agent (which would misinterpret it as a conceptual answer)
+    if (this.isChoiceResponse(message)) {
+      const lastBotMsg = await this.sessionService.getLastAssistantMessage(session.sessionId);
+      if (lastBotMsg && this.hasLetteredChoice(lastBotMsg)) {
+        selectedAgent = 'mentor';
+      }
+    }
+
     const systemPrompt = this.getSystemPrompt(selectedAgent, session);
 
     // Wrap message for evaluator to force JSON scoring
@@ -262,7 +272,16 @@ THIS IS THE MOST IMPORTANT RULE. VIOLATING IT BREAKS THE GAME.`;
 
     await this.sessionService.addMessage(session.sessionId, 'user', message, null);
 
-    const selectedAgent = this.selectAgent(session);
+    let selectedAgent = this.selectAgent(session);
+
+    // If the user is responding to a lettered choice menu, route back to mentor
+    if (this.isChoiceResponse(message)) {
+      const lastBotMsg = await this.sessionService.getLastAssistantMessage(session.sessionId);
+      if (lastBotMsg && this.hasLetteredChoice(lastBotMsg)) {
+        selectedAgent = 'mentor';
+      }
+    }
+
     const systemPrompt = this.getSystemPrompt(selectedAgent, session);
 
     // Wrap message for evaluator to force JSON scoring
@@ -396,6 +415,18 @@ Keep it under 500 words. Write in ${session.learnerProfile.language === 'fr' ? '
     } catch (err) {
       console.warn('[Orchestrator] Thread compaction failed, continuing with current thread:', err);
     }
+  }
+
+  /** Returns true when the user's message looks like selecting from a lettered menu (A/B/C, Oui, Non…) */
+  private isChoiceResponse(message: string): boolean {
+    const trimmed = message.trim();
+    return /^[A-Da-d]\)?$/.test(trimmed) ||
+      /^(oui|non|yes|no|ok|okay|yep|nope|yup|sure|nah)$/i.test(trimmed);
+  }
+
+  /** Returns true when a bot message contains a lettered option list (A) … B) …) */
+  private hasLetteredChoice(botMessage: string): boolean {
+    return /\bA\)\s+\S/.test(botMessage) && /\bB\)\s+\S/.test(botMessage);
   }
 
   private prepareMessage(agent: AgentRole, message: string, session: SessionState): string {
