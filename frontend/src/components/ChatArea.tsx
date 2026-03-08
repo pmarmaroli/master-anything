@@ -67,12 +67,15 @@ function SpeakButton({ text, language }: { text: string; language?: string | nul
   );
 }
 
+
 function extractQuickReplies(content: string, language?: string | null): string[] {
   const abcMatch = content.match(/(?:^|\n)\s*\**[A-Da-d1-4][)\.]\**\s*(.+)/g);
   if (abcMatch && abcMatch.length >= 2) {
-    return abcMatch.map(m =>
-      m.replace(/^\s*\**[A-Da-d1-4][)\.]\**\s*/, '').replace(/\*\*/g, '').trim()
-    ).filter(Boolean);
+    const letters = abcMatch
+      .map(m => { const lm = m.match(/[A-Da-d]/); return lm ? lm[0].toUpperCase() : null; })
+      .filter(Boolean) as string[];
+    const idk = language === 'fr' ? 'Je ne sais pas' : "I don't know";
+    return [...letters, idk];
   }
 
   const questions = content.match(/[^.!?\n]+\?/g);
@@ -141,7 +144,7 @@ function MarkdownContent({ content, adventureMode }: { content: string; adventur
             return <MatterJSRenderer code={text} />;
           }
           return (
-            <code className={`${className} ${adventureMode ? 'bg-[#2a2a4a] text-[#00ff88]' : 'bg-amber-100'} rounded px-1 py-0.5 text-sm`}>
+            <code className={`${className} ${adventureMode ? 'bg-[#e8eeff] text-[#007744]' : 'bg-amber-100'} rounded px-1 py-0.5 text-sm`}>
               {children}
             </code>
           );
@@ -178,13 +181,16 @@ function SplitBubble({ content, delay, adventureMode }: { content: string; delay
 }
 
 export function ChatArea({ messages, isLoading, onSend, listeningMode, language, onLanguageChange, adventureMode }: ChatAreaProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastSpokenRef = useRef<string>('');
 
   useEffect(() => {
-    const el = bottomRef.current;
-    if (!el) return;
-    setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 50);
+    const container = containerRef.current;
+    if (!container) return;
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight;
+    }, 50);
   }, [messages, isLoading]);
 
   // Auto-speak new assistant messages in listening mode
@@ -227,7 +233,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
       <div className={`flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto ${adventureMode ? 'adventure-welcome' : ''}`}>
         <div className="text-center max-w-lg">
           <h2 className={`mb-3 ${adventureMode ? '' : 'text-2xl font-bold text-amber-900'}`}
-            style={adventureMode ? { fontFamily: "'Press Start 2P', cursive", fontSize: '14px', color: '#e0e0e0' } : undefined}
+            style={adventureMode ? { fontFamily: "'Press Start 2P', cursive", fontSize: '14px', color: '#1a1a2e' } : undefined}
           >
             {adventureMode
               ? (language === 'fr' ? 'CHOISIS TON DONJON' : 'CHOOSE YOUR DUNGEON')
@@ -235,7 +241,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
             }
           </h2>
           <p className={`mb-6 ${adventureMode ? '' : 'text-amber-700/70'}`}
-            style={adventureMode ? { fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#6a6a8a', lineHeight: '2' } : undefined}
+            style={adventureMode ? { fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#4a4a6a', lineHeight: '2' } : undefined}
           >
             {adventureMode
               ? (language === 'fr' ? 'Choisis un sujet et descends dans le donjon.' : 'Pick a topic and enter the dungeon.')
@@ -251,10 +257,10 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                 onClick={() => onLanguageChange?.(lang.code)}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all ${
                   adventureMode
-                    ? `border-2 ${language === lang.code ? 'border-[#e94560] text-[#e0e0e0]' : 'border-[#2a2a4a] text-[#6a6a8a] hover:border-[#e94560]'}`
+                    ? `border-2 ${language === lang.code ? 'border-[#e94560] text-[#1a1a2e]' : 'border-[#c0ccee] text-[#4a4a6a] hover:border-[#e94560]'}`
                     : `rounded-full ${language === lang.code ? 'bg-amber-500 text-white shadow-sm' : 'bg-white/80 border-2 border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300'}`
                 }`}
-                style={adventureMode ? { borderRadius: '2px', fontFamily: "'Press Start 2P', cursive", fontSize: '9px', boxShadow: '2px 2px 0px #000' } : undefined}
+                style={adventureMode ? { borderRadius: '2px', fontFamily: "'Press Start 2P', cursive", fontSize: '9px', boxShadow: '2px 2px 0px #a0b0d0' } : undefined}
               >
                 <span>{lang.flag}</span> {lang.label}
               </button>
@@ -276,10 +282,10 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                 disabled={noLang}
                 className={`p-4 text-sm text-left transition-all disabled:cursor-not-allowed ${
                   adventureMode
-                    ? 'border-2 border-[#2a2a4a] text-[#e0e0e0] hover:border-[#e94560]'
+                    ? 'border-2 border-[#c0ccee] text-[#1a1a2e] hover:border-[#e94560]'
                     : 'text-amber-900 bg-white/80 border-2 border-amber-200 rounded-2xl hover:bg-amber-50 hover:border-amber-300 hover:shadow-md'
                 }`}
-                style={adventureMode ? { borderRadius: '2px', fontFamily: "'Press Start 2P', cursive", fontSize: '8px', lineHeight: '2', backgroundColor: '#1a1a2e', boxShadow: '3px 3px 0px #000' } : undefined}
+                style={adventureMode ? { borderRadius: '2px', fontFamily: "'Press Start 2P', cursive", fontSize: '8px', lineHeight: '2', backgroundColor: '#e8eeff', boxShadow: '3px 3px 0px #a0b0d0' } : undefined}
               >
                 {example}
               </button>
@@ -304,7 +310,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
   };
 
   return (
-    <div className={`flex-1 min-h-0 overflow-y-auto p-4 space-y-5 ${adventureMode ? 'adventure-chat' : ''}`}>
+    <div ref={containerRef} className={`flex-1 min-h-0 overflow-y-auto p-4 space-y-5 ${adventureMode ? 'adventure-chat' : ''}`}>
       {messages.map((message) => {
         const isEmpty = message.role === 'assistant' && !message.content;
         const showDots = isEmpty && isLoading;
@@ -327,7 +333,7 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                   ? 'rounded-full bg-orange-100 border-2 border-orange-300'
                   : 'rounded-full bg-emerald-100 border-2 border-emerald-300')
             }`}
-              style={adventureMode ? { borderRadius: '2px', border: `2px solid ${isUser ? '#0096ff' : '#8b5cf6'}`, backgroundColor: isUser ? '#1e3a5f' : '#2a1a3e' } : undefined}
+              style={adventureMode ? { borderRadius: '2px', border: `2px solid ${isUser ? '#0096ff' : '#8b5cf6'}`, backgroundColor: isUser ? '#ddeeff' : '#ede0ff' } : undefined}
             >
               {isUser ? '\uD83D\uDDE1\uFE0F' : '\uD83E\uDDE0'}
             </div>
@@ -358,7 +364,10 @@ export function ChatArea({ messages, isLoading, onSend, listeningMode, language,
                   </div>
                 ) : message.role === 'assistant' ? (
                   <>
-                    <MarkdownContent content={message.content} adventureMode={adventureMode} />
+                    <MarkdownContent
+                      content={message.content}
+                      adventureMode={adventureMode}
+                    />
                     {!listeningMode && !adventureMode && <SpeakButton text={message.content} language={language} />}
                   </>
                 ) : (

@@ -29,24 +29,24 @@ export function InventoryModal({ show, onClose, inventory, language, adventureMo
         ref={dialogRef}
         onClose={onClose}
         className="max-w-md w-[90vw] p-0 backdrop:bg-black/60"
-        style={{ borderRadius: '2px', border: '3px solid #2a2a4a', backgroundColor: '#1a1a2e' }}
+        style={{ borderRadius: '2px', border: '3px solid #c0ccee', backgroundColor: '#e8eeff' }}
       >
-        <div className="p-6" style={{ backgroundColor: '#1a1a2e' }}>
+        <div className="p-6" style={{ backgroundColor: '#e8eeff' }}>
           <div className="flex items-center justify-between mb-5">
-            <h2 style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '12px', color: '#ffbd39' }}>
+            <h2 style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '12px', color: '#cc8800' }}>
               {fr ? 'LOOT' : 'LOOT'}
             </h2>
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center text-lg hover:text-[#e94560] transition-colors"
-              style={{ color: '#6a6a8a' }}
+              style={{ color: '#4a4a6a' }}
             >
               &times;
             </button>
           </div>
 
           {inventory.length === 0 ? (
-            <p className="text-center py-8" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#6a6a8a', lineHeight: '2' }}>
+            <p className="text-center py-8" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#4a4a6a', lineHeight: '2' }}>
               {fr ? 'Pas de loot. Bats des bosses pour en obtenir !' : 'No loot yet. Defeat bosses to get some!'}
             </p>
           ) : (
@@ -56,15 +56,15 @@ export function InventoryModal({ show, onClose, inventory, language, adventureMo
                   key={i}
                   className="p-3 text-center cursor-default group"
                   style={{
-                    backgroundColor: '#0f0f23',
-                    border: '2px solid #2a2a4a',
-                    boxShadow: '2px 2px 0px #000',
+                    backgroundColor: '#f0f4ff',
+                    border: '2px solid #c0ccee',
+                    boxShadow: '2px 2px 0px #a0b0d0',
                   }}
                   title={`${item.concept}: ${item.description}`}
                 >
                   <div className="text-3xl mb-1">{item.emoji}</div>
-                  <div className="truncate" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '7px', color: '#e0e0e0' }}>{item.name}</div>
-                  <div className="truncate opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '6px', color: '#6a6a8a' }}>{item.concept}</div>
+                  <div className="truncate" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '7px', color: '#1a1a2e' }}>{item.name}</div>
+                  <div className="truncate opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '6px', color: '#4a4a6a' }}>{item.concept}</div>
                 </div>
               ))}
             </div>

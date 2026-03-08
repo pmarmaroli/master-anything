@@ -61,8 +61,13 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
   }, [listeningMode, onSend, language]);
 
   // Clear input when a message is being sent (e.g. via quick reply buttons)
+  // Re-focus textarea when bot finishes responding
   useEffect(() => {
-    if (disabled) setInput('');
+    if (disabled) {
+      setInput('');
+    } else {
+      textareaRef.current?.focus();
+    }
   }, [disabled]);
 
   // Auto-resize textarea
@@ -95,12 +100,11 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
 
     if (isListening) {
       recognitionRef.current?.stop();
-      setIsListening(false);
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = language === 'fr' ? 'fr-FR' : language === 'en' ? 'en-US' : '';
 
@@ -111,8 +115,14 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
       setInput(transcript);
     };
 
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+    recognition.onerror = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
@@ -122,10 +132,10 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
   return (
     <div className={`border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 ${
       adventureMode
-        ? 'adventure-input-area border-[#2a2a4a]'
+        ? 'adventure-input-area border-[#c0ccee]'
         : 'border-amber-200/60 bg-white/50 backdrop-blur-sm'
     }`}
-      style={adventureMode ? { backgroundColor: '#1a1a2e', borderColor: '#2a2a4a' } : undefined}
+      style={adventureMode ? { backgroundColor: '#e8eeff', borderColor: '#c0ccee' } : undefined}
     >
       <div className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
         <textarea
@@ -140,10 +150,10 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
           rows={1}
           className={`flex-1 resize-none px-4 py-3 text-sm focus:outline-none disabled:opacity-50 ${
             adventureMode
-              ? 'adventure-input border-2 border-[#2a2a4a] focus:border-[#e94560]'
+              ? 'adventure-input border-2 border-[#c0ccee] focus:border-[#e94560]'
               : 'rounded-2xl border-2 border-amber-200 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 placeholder:text-amber-400'
           }`}
-          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#0f0f23', color: '#e0e0e0', fontFamily: "'Press Start 2P', cursive", fontSize: '10px' } : undefined}
+          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#f8f9ff', color: '#1a1a2e', fontFamily: "'Press Start 2P', cursive", fontSize: '10px' } : undefined}
         />
         {SpeechRecognition && !adventureMode && (
           <button
@@ -156,7 +166,9 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
             } disabled:opacity-40`}
             title={isListening ? 'Stop recording' : 'Voice input'}
           >
-            \uD83C\uDF99\uFE0F
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-3.07A7 7 0 0 0 19 11h-2z"/>
+            </svg>
           </button>
         )}
         <button

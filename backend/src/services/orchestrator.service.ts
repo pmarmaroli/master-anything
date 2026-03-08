@@ -104,7 +104,16 @@ NEVER use ASCII art, box drawing characters, arrows made of dashes, or plain tex
    Examples: $a^2 + b^2 = c^2$, $$\\frac{a}{b} = \\frac{c}{d}$$, $\\sqrt{x^2 + y^2}$
    The app renders LaTeX beautifully — ALWAYS use it for math instead of plain text.
 
-BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message. Ask ONE question, then stop. The learner is a teenager — long messages make them lose interest. Get to the point fast.`;
+BREVITY RULE (CRITICAL): Keep messages SHORT. Maximum 3-4 sentences per message. Ask ONE question, then stop. The learner is a teenager — long messages make them lose interest. Get to the point fast.
+
+=== FINAL MANDATORY RULE — ONE QUESTION ONLY ===
+Your response MUST contain AT MOST ONE set of lettered choices (A) B) C)).
+BAD EXAMPLE (NEVER DO THIS):
+  "Do you know X? A) Yes B) No
+   Super! Now, do you know Y? A) Yes B) A bit C) No"
+GOOD EXAMPLE:
+  "Do you know X? A) Yes B) No"
+If you catch yourself writing a second question or a second A)/B)/C) block — DELETE IT. Stop after the first choice block.`;
     if (session.adventureMode) {
       prompt += this.getAdventurePrompt(agent, session);
       // Repeat brevity rule at the very end — LLMs give more weight to last instructions
@@ -259,13 +268,37 @@ THIS IS THE MOST IMPORTANT RULE. VIOLATING IT BREAKS THE GAME.`;
     // Wrap message for evaluator to force JSON scoring
     const agentMessage = this.prepareMessage(selectedAgent, message, session);
 
-    let response = await this.agentService.sendMessageStreaming(
-      session.threadId,
-      selectedAgent,
-      agentMessage,
-      systemPrompt,
-      onToken
-    );
+    // Evaluator returns a JSON scoring block — never stream it raw to the user.
+    // Capture without streaming, parse, then emit only the feedback text.
+    let response: string;
+    if (selectedAgent === 'evaluator') {
+      response = await this.agentService.sendMessage(
+        session.threadId,
+        selectedAgent,
+        agentMessage,
+        systemPrompt
+      );
+      const parsed = this.masteryService.parseEvaluatorResponse(response);
+      if (parsed?.feedback) {
+        onToken(parsed.feedback);
+      }
+    } else {
+      const truncatingOnToken = session.adventureMode
+        ? onToken
+        : this.createTruncatingOnToken(onToken);
+      response = await this.agentService.sendMessageStreaming(
+        session.threadId,
+        selectedAgent,
+        agentMessage,
+        systemPrompt,
+        truncatingOnToken
+      );
+    }
+
+    // Post-process: truncate to first question block (prevents double-question bug)
+    if (!session.adventureMode && selectedAgent !== 'evaluator') {
+      response = this.truncateToFirstQuestion(response);
+    }
 
     // 2-step rendering: call Renderer for visual enhancement (streamed)
     if (this.shouldCallRenderer(selectedAgent, response)) {
@@ -921,6 +954,70 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
       engagementTip: OrchestratorService.getEngagementTip(session.currentStep, currentConcept),
+    };
+  }
+
+  /**
+   * Truncates a response to its first question block (A)/B)/C) choices).
+   * Prevents double-question bug where the LLM emits two separate question blocks
+   * in one response despite the ONE QUESTION AT A TIME rule.
+   */
+  private truncateToFirstQuestion(text: string): string {
+    const lines = text.split('\n');
+    const isChoiceLine = (line: string) => /^\s*[A-D]\)\s+/i.test(line);
+
+    let firstBlockFound = false;
+    let firstBlockEnded = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const isChoice = isChoiceLine(lines[i]);
+
+      if (isChoice && !firstBlockFound) {
+        firstBlockFound = true;
+      } else if (!isChoice && firstBlockFound && !firstBlockEnded && lines[i].trim() !== '') {
+        firstBlockEnded = true;
+      } else if (isChoice && firstBlockEnded) {
+        // Second choice block detected — truncate before blank lines leading into it
+        let truncateAt = i;
+        while (truncateAt > 0 && lines[truncateAt - 1].trim() === '') {
+          truncateAt--;
+        }
+        return lines.slice(0, truncateAt).join('\n').trimEnd();
+      }
+    }
+
+    return text;
+  }
+
+  /**
+   * Returns an onToken wrapper that stops forwarding tokens once a second
+   * question block (A)/B)/C)) is detected. Prevents the double-question bug
+   * from reaching the client during streaming.
+   */
+  private createTruncatingOnToken(onToken: (token: string) => void): (token: string) => void {
+    let accumulated = '';
+    let stopped = false;
+
+    const countChoiceBlocks = (text: string): number => {
+      const lines = text.split('\n');
+      let count = 0;
+      let inBlock = false;
+      for (const line of lines) {
+        const isChoice = /^\s*[A-D]\)\s+/i.test(line);
+        if (isChoice && !inBlock) { count++; inBlock = true; }
+        else if (!isChoice && inBlock && line.trim() !== '') { inBlock = false; }
+      }
+      return count;
+    };
+
+    return (token: string) => {
+      if (stopped) return;
+      accumulated += token;
+      if (countChoiceBlocks(accumulated) >= 2) {
+        stopped = true;
+        return; // Drop this token and all subsequent ones
+      }
+      onToken(token);
     };
   }
 }

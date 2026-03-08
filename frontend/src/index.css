@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Prevent KaTeX / renderer content from growing the document body beyond the viewport */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Contain KaTeX display equations within their bubble */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.katex {
+  max-width: 100%;
+}
