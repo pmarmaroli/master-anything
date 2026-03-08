@@ -55,11 +55,11 @@ export function RoundTimer({ active, language }: RoundTimerProps) {
         <div
           className="mb-2 px-3 py-2 text-center"
           style={{
-            background: '#1a1a2e',
-            border: '2px solid #ffbd39',
-            boxShadow: '3px 3px 0px #000',
+            background: '#e8eeff',
+            border: '2px solid #cc8800',
+            boxShadow: '3px 3px 0px #a0b0d0',
             fontSize: '7px',
-            color: '#ffbd39',
+            color: '#cc8800',
             maxWidth: '160px',
             lineHeight: '1.6',
           }}
@@ -77,7 +77,7 @@ export function RoundTimer({ active, language }: RoundTimerProps) {
               fontSize: '6px',
               padding: '3px 6px',
               cursor: 'pointer',
-              boxShadow: '2px 2px 0px #000',
+              boxShadow: '2px 2px 0px #a0b0d0',
             }}
           >
             OK
@@ -86,12 +86,12 @@ export function RoundTimer({ active, language }: RoundTimerProps) {
       )}
       <div
         style={{
-          background: '#1a1a2e',
-          border: `2px solid ${isLong ? '#e94560' : '#2a2a4a'}`,
-          boxShadow: '3px 3px 0px #000',
+          background: '#e8eeff',
+          border: `2px solid ${isLong ? '#e94560' : '#c0ccee'}`,
+          boxShadow: '3px 3px 0px #a0b0d0',
           padding: '4px 8px',
           fontSize: '9px',
-          color: isLong ? '#e94560' : '#6a6a8a',
+          color: isLong ? '#e94560' : '#4a4a6a',
         }}
       >
         ⏱ {timeStr}

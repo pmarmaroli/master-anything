@@ -132,10 +132,10 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
   return (
     <div className={`border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 ${
       adventureMode
-        ? 'adventure-input-area border-[#2a2a4a]'
+        ? 'adventure-input-area border-[#c0ccee]'
         : 'border-amber-200/60 bg-white/50 backdrop-blur-sm'
     }`}
-      style={adventureMode ? { backgroundColor: '#1a1a2e', borderColor: '#2a2a4a' } : undefined}
+      style={adventureMode ? { backgroundColor: '#e8eeff', borderColor: '#c0ccee' } : undefined}
     >
       <div className="flex items-end gap-2 sm:gap-3 max-w-4xl mx-auto">
         <textarea
@@ -150,10 +150,10 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
           rows={1}
           className={`flex-1 resize-none px-4 py-3 text-sm focus:outline-none disabled:opacity-50 ${
             adventureMode
-              ? 'adventure-input border-2 border-[#2a2a4a] focus:border-[#e94560]'
+              ? 'adventure-input border-2 border-[#c0ccee] focus:border-[#e94560]'
               : 'rounded-2xl border-2 border-amber-200 bg-white focus:ring-2 focus:ring-amber-300 focus:border-amber-300 placeholder:text-amber-400'
           }`}
-          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#0f0f23', color: '#e0e0e0', fontFamily: "'Press Start 2P', cursive", fontSize: '10px' } : undefined}
+          style={adventureMode ? { borderRadius: '2px', backgroundColor: '#f8f9ff', color: '#1a1a2e', fontFamily: "'Press Start 2P', cursive", fontSize: '10px' } : undefined}
         />
         {SpeechRecognition && !adventureMode && (
           <button

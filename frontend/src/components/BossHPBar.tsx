@@ -59,16 +59,16 @@ export function BossHPBar({ bossName, hp, event, roomProgress, bossesSlain }: Bo
     <div
       ref={barRef}
       className={`relative px-3 py-2 transition-transform ${shake ? 'animate-shake' : ''} ${defeated ? 'animate-shatter' : ''}`}
-      style={{ backgroundColor: '#1a1a2e', borderBottom: '3px solid #2a2a4a' }}
+      style={{ backgroundColor: '#e8eeff', borderBottom: '3px solid #c0ccee' }}
     >
       {/* Boss name and HP */}
       <div className="flex justify-between items-center mb-1" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '9px' }}>
-        <span style={{ color: '#e0e0e0' }}>{bossName}</span>
+        <span style={{ color: '#1a1a2e' }}>{bossName}</span>
         <span style={{ color: hpColor }}>{Math.max(0, displayHP)}%</span>
       </div>
 
       {/* HP Bar */}
-      <div className="flex gap-[2px] h-5 relative" style={{ backgroundColor: '#0f0f23', border: '2px solid #2a2a4a' }}>
+      <div className="flex gap-[2px] h-5 relative" style={{ backgroundColor: '#f0f4ff', border: '2px solid #c0ccee' }}>
         {segments.map((seg, i) => (
           <div
             key={i}

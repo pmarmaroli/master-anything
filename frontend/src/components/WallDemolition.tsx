@@ -29,9 +29,9 @@ export function WallDemolition({ totalBlocks, blocksRemaining, event }: WallDemo
   return (
     <div
       className={`px-3 py-2 ${wallCollapsed ? 'animate-shatter' : ''}`}
-      style={{ backgroundColor: '#1a1a2e', borderBottom: '3px solid #2a2a4a' }}
+      style={{ backgroundColor: '#e8eeff', borderBottom: '3px solid #c0ccee' }}
     >
-      <div className="flex justify-between mb-1" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#6a6a8a' }}>
+      <div className="flex justify-between mb-1" style={{ fontFamily: "'Press Start 2P', cursive", fontSize: '8px', color: '#4a4a6a' }}>
         <span>FINAL WALL</span>
         <span>{destroyed}/{totalBlocks}</span>
       </div>
@@ -44,9 +44,9 @@ export function WallDemolition({ totalBlocks, blocksRemaining, event }: WallDemo
               key={i}
               className={`flex-1 transition-all duration-300 ${isExploding ? 'animate-block-explode' : ''}`}
               style={{
-                backgroundColor: isDestroyed ? 'transparent' : '#4a3a2a',
-                border: isDestroyed ? '1px dashed #2a2a4a' : '2px solid #6a5a4a',
-                boxShadow: isDestroyed ? 'none' : '2px 2px 0px #000',
+                backgroundColor: isDestroyed ? 'transparent' : '#c8b090',
+                border: isDestroyed ? '1px dashed #c0ccee' : '2px solid #9a8a6a',
+                boxShadow: isDestroyed ? 'none' : '2px 2px 0px #a0b0d0',
               }}
             />
           );

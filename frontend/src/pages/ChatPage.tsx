@@ -151,7 +151,7 @@ export function ChatPage() {
             onClick={() => setShowAbout(true)}
             className={`w-7 h-7 rounded-full text-xs font-bold transition-colors ${
               adventureMode
-                ? 'border-2 border-[#2a2a4a] text-[#6a6a8a] hover:border-[#e94560]'
+                ? 'border-2 border-[#c0ccee] text-[#4a4a6a] hover:border-[#e94560]'
                 : 'bg-amber-100 border border-amber-300 text-amber-700 hover:bg-amber-200'
             }`}
             style={adventureMode ? { borderRadius: '2px', fontFamily: "'Press Start 2P', cursive", fontSize: '8px' } : undefined}
@@ -172,7 +172,7 @@ export function ChatPage() {
             onClick={() => setShowProgress(true)}
             className={`lg:hidden w-7 h-7 text-xs font-bold transition-colors ${
               adventureMode
-                ? 'border-2 border-[#2a2a4a] text-[#6a6a8a] hover:border-[#00ff88]'
+                ? 'border-2 border-[#c0ccee] text-[#4a4a6a] hover:border-[#00aa55]'
                 : 'rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 hover:bg-emerald-200'
             }`}
             style={adventureMode ? { borderRadius: '2px' } : undefined}
@@ -184,7 +184,7 @@ export function ChatPage() {
             <>
               <button
                 onClick={() => setShowInventory(true)}
-                className="w-7 h-7 border-2 border-[#2a2a4a] text-[#ffbd39] text-xs font-bold hover:border-[#ffbd39] transition-colors"
+                className="w-7 h-7 border-2 border-[#c0ccee] text-[#cc8800] text-xs font-bold hover:border-[#cc8800] transition-colors"
                 style={{ borderRadius: '2px' }}
                 title={language === 'fr' ? 'Inventaire' : 'Inventory'}
               >
@@ -192,8 +192,8 @@ export function ChatPage() {
               </button>
               <button
                 onClick={toggleSound}
-                className="w-7 h-7 border-2 border-[#2a2a4a] text-xs hover:border-[#e94560] transition-colors"
-                style={{ borderRadius: '2px', color: soundOn ? '#00ff88' : '#6a6a8a' }}
+                className="w-7 h-7 border-2 border-[#c0ccee] text-xs hover:border-[#e94560] transition-colors"
+                style={{ borderRadius: '2px', color: soundOn ? '#007744' : '#4a4a6a' }}
                 title={soundOn ? 'Mute' : 'Unmute'}
               >
                 {soundOn ? '\uD83D\uDD0A' : '\uD83D\uDD07'}
