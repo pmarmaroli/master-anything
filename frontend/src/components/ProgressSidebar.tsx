@@ -52,6 +52,13 @@ export function ProgressSidebar({ progress }: ProgressSidebarProps) {
           <PhaseIndicator phase={progress.currentPhase} step={progress.currentStep} />
         </div>
 
+        {/* Next Goal — immediate engagement tip */}
+        {progress.engagementTip && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800 font-medium">{progress.engagementTip}</p>
+          </div>
+        )}
+
         {/* Concept Progress */}
         <div>
           <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Concepts</h4>

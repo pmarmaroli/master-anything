@@ -881,6 +881,24 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
     return base;
   }
 
+  getEngagementTip(step: string, concept: string): string {
+    const tips: Record<string, string> = {
+      'A1': '🎯 Goal: Choose a topic to master',
+      'A2': '🔍 Goal: Show what you already know',
+      'A3': '🗺️ Goal: Review your learning roadmap',
+      'A4': '🚀 Goal: Get ready to start learning',
+      'B1': `💡 Goal: Explain "${concept}" in your own words`,
+      'B2': `🛡️ Goal: Answer the challenge question about "${concept}"`,
+      'B3': `🎯 Goal: Simplify "${concept}" so anyone can understand`,
+      'B4': `📊 Goal: Your explanation of "${concept}" is being scored`,
+      'B5': `🔄 Goal: Review previous concepts before moving on`,
+      'C1': `✅ Goal: Prove your mastery of "${concept}"`,
+      'C2': `✅ Goal: Final validation of "${concept}"`,
+      'C3': '🏆 Goal: Complete your mastery journey',
+    };
+    return tips[step] || '📚 Keep going — you are making progress!';
+  }
+
   private buildMasteryProgress(session: SessionState): MasteryProgress {
     const scores = session.masteryScores;
     const totalScores = Object.values(scores);
@@ -889,11 +907,12 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
       : 0;
 
     const dueReviews = this.spacedRepetitionService.getDueItems(session.spacedRepetition);
+    const currentConcept = session.topicMap.concepts[session.conceptIndex] || '';
 
     return {
       currentPhase: session.currentPhase,
       currentStep: session.currentStep,
-      currentConcept: session.topicMap.concepts[session.conceptIndex] || '',
+      currentConcept,
       conceptIndex: session.conceptIndex,
       totalConcepts: session.topicMap.concepts.length,
       overallMastery,
@@ -901,6 +920,7 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
       inventory: session.inventory || [],
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
+      engagementTip: this.getEngagementTip(session.currentStep, currentConcept),
     };
   }
 }

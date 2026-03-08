@@ -24,6 +24,7 @@ export interface MasteryProgress {
     status: 'locked' | 'current' | 'mastered';
     prerequisites: string[];
   }>;
+  engagementTip: string;
 }
 
 export interface MasteryResponse {

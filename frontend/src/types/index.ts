@@ -55,6 +55,7 @@ export interface MasteryProgress {
   reviewsDue: number;
   knowledgeGraph: KnowledgeGraphNode[];
   inventory: Reward[];
+  engagementTip: string;
 }
 
 export interface ChatMessage {
