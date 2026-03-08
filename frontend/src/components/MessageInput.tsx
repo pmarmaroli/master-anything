@@ -100,12 +100,11 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
 
     if (isListening) {
       recognitionRef.current?.stop();
-      setIsListening(false);
       return;
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = language === 'fr' ? 'fr-FR' : language === 'en' ? 'en-US' : '';
 
@@ -116,8 +115,14 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
       setInput(transcript);
     };
 
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+    recognition.onerror = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
@@ -161,7 +166,9 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
             } disabled:opacity-40`}
             title={isListening ? 'Stop recording' : 'Voice input'}
           >
-            \uD83C\uDF99\uFE0F
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21h2v-3.07A7 7 0 0 0 19 11h-2z"/>
+            </svg>
           </button>
         )}
         <button
