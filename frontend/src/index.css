@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Prevent KaTeX / renderer content from growing the document body beyond the viewport */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
