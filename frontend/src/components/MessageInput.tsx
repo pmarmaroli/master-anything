@@ -61,8 +61,13 @@ export function MessageInput({ onSend, disabled, listeningMode, language, advent
   }, [listeningMode, onSend, language]);
 
   // Clear input when a message is being sent (e.g. via quick reply buttons)
+  // Re-focus textarea when bot finishes responding
   useEffect(() => {
-    if (disabled) setInput('');
+    if (disabled) {
+      setInput('');
+    } else {
+      textareaRef.current?.focus();
+    }
   }, [disabled]);
 
   // Auto-resize textarea
