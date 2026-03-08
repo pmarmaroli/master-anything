@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { SessionService } from '../services/session.service';
 import { SpacedRepetitionService } from '../services/spaced-repetition.service';
+import { OrchestratorService } from '../services/orchestrator.service';
 import { MasteryProgress } from '../types';
 
 const router = Router();
@@ -36,6 +37,10 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
       inventory: session.inventory || [],
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
+      engagementTip: OrchestratorService.getEngagementTip(
+        session.currentStep,
+        session.topicMap.concepts[session.conceptIndex] || ''
+      ),
     };
 
     res.json({

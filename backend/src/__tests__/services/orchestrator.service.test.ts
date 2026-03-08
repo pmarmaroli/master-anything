@@ -107,4 +107,44 @@ describe('OrchestratorService', () => {
       expect(service.shouldCallRenderer('mentor', 'Short response with circuit diagram.')).toBe(false);
     });
   });
+
+  describe('getEngagementTip', () => {
+    it('should return topic selection tip for step A1', () => {
+      const tip = OrchestratorService.getEngagementTip('A1', '');
+      expect(tip).toContain('Choose a topic');
+    });
+
+    it('should include concept name in B1 tip', () => {
+      const tip = OrchestratorService.getEngagementTip('B1', 'Photosynthesis');
+      expect(tip).toContain('Photosynthesis');
+      expect(tip).toContain('Explain');
+    });
+
+    it('should include concept name in B2 tip', () => {
+      const tip = OrchestratorService.getEngagementTip('B2', 'Gravity');
+      expect(tip).toContain('Gravity');
+      expect(tip).toContain('challenge');
+    });
+
+    it('should include concept name in B3 tip', () => {
+      const tip = OrchestratorService.getEngagementTip('B3', 'Mitosis');
+      expect(tip).toContain('Mitosis');
+      expect(tip).toContain('Simplify');
+    });
+
+    it('should return scoring tip for B4', () => {
+      const tip = OrchestratorService.getEngagementTip('B4', 'Friction');
+      expect(tip).toContain('scored');
+    });
+
+    it('should return completion tip for C3', () => {
+      const tip = OrchestratorService.getEngagementTip('C3', '');
+      expect(tip).toContain('mastery journey');
+    });
+
+    it('should return a fallback tip for unknown steps', () => {
+      const tip = OrchestratorService.getEngagementTip('Z9', '');
+      expect(tip).toContain('progress');
+    });
+  });
 });

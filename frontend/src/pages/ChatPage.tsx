@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useChat } from '../hooks/useChat';
+import type { MasteryProgress } from '../types';
 import { ChatArea } from '../components/ChatArea';
 import { MessageInput } from '../components/MessageInput';
 import { ProgressSidebar } from '../components/ProgressSidebar';
@@ -21,6 +22,7 @@ import '../styles/adventure.css';
 export function ChatPage() {
   const { messages, progress, isLoading, sendMessage, language, setLanguage, adventureMode, setAdventureMode, lastAdventureEvent } = useChat();
   const [masteryBadgeConcept, setMasteryBadgeConcept] = useState<string | null>(null);
+  const [masteryBadgeReward, setMasteryBadgeReward] = useState<{ name: string; emoji: string; description: string } | null>(null);
   const [listeningMode, setListeningMode] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
@@ -31,8 +33,47 @@ export function ChatPage() {
   const [showScreenFlash, setShowScreenFlash] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [streak, setStreak] = useState(0);
+  const prevProgressRef = useRef<MasteryProgress | null>(null);
 
   const handleDismissBadge = useCallback(() => setMasteryBadgeConcept(null), []);
+
+  // Detect concept mastery in study mode — trigger badge + confetti + streak
+  useEffect(() => {
+    if (!progress || adventureMode) {
+      prevProgressRef.current = progress;
+      return;
+    }
+    const prev = prevProgressRef.current;
+    if (prev) {
+      const prevScores = prev.conceptScores;
+      const currScores = progress.conceptScores;
+      for (const concept of Object.keys(currScores)) {
+        const wasBelow = !prevScores[concept] || prevScores[concept].overall < 85;
+        const isNowMastered = currScores[concept].overall >= 85;
+        if (wasBelow && isNowMastered) {
+          const latestReward = progress.inventory.length > 0
+            ? progress.inventory[progress.inventory.length - 1]
+            : null;
+          setMasteryBadgeConcept(concept);
+          setMasteryBadgeReward(latestReward);
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 1800);
+          setStreak(s => s + 1);
+          break;
+        }
+      }
+      // Reset streak on loop-back (same concept index, step went back to B1)
+      if (
+        prev.conceptIndex === progress.conceptIndex &&
+        prev.currentStep !== 'B1' &&
+        progress.currentStep === 'B1' &&
+        progress.currentPhase === 'learning_loop'
+      ) {
+        setStreak(0);
+      }
+    }
+    prevProgressRef.current = progress;
+  }, [progress, adventureMode]);
 
   // Toggle sound
   const toggleSound = useCallback(() => {
@@ -121,7 +162,7 @@ export function ChatPage() {
           {progress && !adventureMode && (
             <PhaseIndicator phase={progress.currentPhase} step={progress.currentStep} />
           )}
-          {adventureMode && <StreakCounter streak={streak} onMilestone={() => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 1800); }} />}
+          <StreakCounter streak={streak} onMilestone={() => { setShowConfetti(true); setTimeout(() => setShowConfetti(false), 1800); }} />
         </div>
         <div className="flex items-center gap-3">
           {progress?.currentConcept && !adventureMode && (
@@ -249,6 +290,7 @@ export function ChatPage() {
         concept={masteryBadgeConcept || ''}
         show={!!masteryBadgeConcept}
         onDismiss={handleDismissBadge}
+        reward={masteryBadgeReward}
       />
 
       {/* Round timer — adventure mode boss fights only */}
