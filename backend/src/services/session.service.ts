@@ -356,4 +356,16 @@ export class SessionService {
       timestamp: r.created_at,
     }));
   }
+
+  async getLastAssistantMessage(sessionId: string): Promise<string | null> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('sessionId', sessionId)
+      .query(
+        `SELECT TOP 1 content FROM conversation_history
+         WHERE session_id = @sessionId AND role = 'assistant'
+         ORDER BY created_at DESC`
+      );
+    return result.recordset[0]?.content ?? null;
+  }
 }
