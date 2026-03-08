@@ -117,7 +117,7 @@ export function ChatPage() {
   const showWall = adventureMode && progress?.currentPhase === 'validation' && lastAdventureEvent;
 
   return (
-    <div className={`h-dvh flex flex-col overflow-x-hidden transition-all duration-300 ${
+    <div className={`h-dvh flex flex-col overflow-hidden transition-all duration-300 ${
       adventureMode
         ? 'adventure-mode'
         : 'bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50'
