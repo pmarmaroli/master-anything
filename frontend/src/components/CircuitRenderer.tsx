@@ -1,37 +1,12 @@
 import { useMemo } from 'react';
+import {
+  parseCircuit, buildLayout, buildLegacyLayout, isNewFormat,
+  type Layout,
+} from './circuitLayout';
 
-interface CircuitNode {
-  id: string;
-  x: number;
-  y: number;
-  type:
-    | 'resistor'
-    | 'capacitor'
-    | 'battery'
-    | 'ground'
-    | 'diode'
-    | 'led'
-    | 'switch'
-    | 'inductor'
-    | 'box';
-  label?: string;
-  value?: string;
-}
+// ─── Component Symbols ────────────────────────────────────────────────────────
 
-interface CircuitWire {
-  from: string;
-  to: string;
-}
-
-interface CircuitSpec {
-  nodes: CircuitNode[];
-  wires?: CircuitWire[];
-  width?: number;
-  height?: number;
-}
-
-// Each symbol is drawn centered at (0,0), fitting roughly in a 60x30 box.
-function ComponentSymbol({ type, label, value }: { type: CircuitNode['type']; label?: string; value?: string }) {
+function ComponentSymbol({ type, label, value }: { type: string; label?: string; value?: string }) {
   const text = value ?? label ?? '';
 
   switch (type) {
@@ -57,6 +32,7 @@ function ComponentSymbol({ type, label, value }: { type: CircuitNode['type']; la
       );
 
     case 'battery':
+    case 'voltage_source':
       return (
         <g>
           <line x1="-30" y1="0" x2="-6" y2="0" stroke="currentColor" strokeWidth="2" />
@@ -97,10 +73,24 @@ function ComponentSymbol({ type, label, value }: { type: CircuitNode['type']; la
           <polygon points="-10,10 -10,-10 10,0" fill="currentColor" />
           <line x1="10" y1="-10" x2="10" y2="10" stroke="currentColor" strokeWidth="2.5" />
           <line x1="10" y1="0" x2="30" y2="0" stroke="currentColor" strokeWidth="2" />
-          {/* Light rays */}
           <line x1="14" y1="-14" x2="20" y2="-20" stroke="currentColor" strokeWidth="1.5" />
           <line x1="18" y1="-8" x2="26" y2="-12" stroke="currentColor" strokeWidth="1.5" />
           {text && <text x="0" y="-16" textAnchor="middle" fontSize="10" fill="currentColor">{text}</text>}
+        </g>
+      );
+
+    // Bulb / lamp (ampoule) — circle with cross inside
+    case 'bulb':
+    case 'lamp':
+    case 'ampoule':
+      return (
+        <g>
+          <line x1="-30" y1="0" x2="-12" y2="0" stroke="currentColor" strokeWidth="2" />
+          <circle cx="0" cy="0" r="12" fill="none" stroke="currentColor" strokeWidth="2" />
+          <line x1="-8" y1="-8" x2="8" y2="8" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="8" y1="-8" x2="-8" y2="8" stroke="currentColor" strokeWidth="1.5" />
+          <line x1="12" y1="0" x2="30" y2="0" stroke="currentColor" strokeWidth="2" />
+          {text && <text x="0" y="-18" textAnchor="middle" fontSize="10" fill="currentColor">{text}</text>}
         </g>
       );
 
@@ -129,6 +119,17 @@ function ComponentSymbol({ type, label, value }: { type: CircuitNode['type']; la
         </g>
       );
 
+    // Logic gates as labeled boxes
+    case 'and': case 'or': case 'not': case 'nand': case 'nor': case 'xor':
+      return (
+        <g>
+          <line x1="-30" y1="0" x2="-16" y2="0" stroke="currentColor" strokeWidth="2" />
+          <rect x="-16" y="-14" width="32" height="28" fill="none" stroke="currentColor" strokeWidth="2" />
+          <line x1="16" y1="0" x2="30" y2="0" stroke="currentColor" strokeWidth="2" />
+          <text x="0" y="4" textAnchor="middle" fontSize="9" fill="currentColor">{type.toUpperCase()}</text>
+        </g>
+      );
+
     case 'box':
     default:
       return (
@@ -136,42 +137,29 @@ function ComponentSymbol({ type, label, value }: { type: CircuitNode['type']; la
           <line x1="-30" y1="0" x2="-16" y2="0" stroke="currentColor" strokeWidth="2" />
           <rect x="-16" y="-14" width="32" height="28" fill="none" stroke="currentColor" strokeWidth="2" />
           <line x1="16" y1="0" x2="30" y2="0" stroke="currentColor" strokeWidth="2" />
-          {text && (
-            <text x="0" y="4" textAnchor="middle" fontSize="10" fill="currentColor">{text}</text>
-          )}
+          {text && <text x="0" y="4" textAnchor="middle" fontSize="10" fill="currentColor">{text}</text>}
         </g>
       );
   }
 }
 
-function parseCircuit(code: string): CircuitSpec | null {
-  try {
-    // Strip markdown-style comments and parse as JSON5-ish (we'll just use JSON).
-    const cleaned = code
-      .replace(/\/\/[^\n]*/g, '')
-      .replace(/,(\s*[}\]])/g, '$1')
-      .trim();
-    return JSON.parse(cleaned) as CircuitSpec;
-  } catch {
-    // Try a simple fallback: wrap bare object in braces if needed.
-    try {
-      return JSON.parse(`{${code}}`) as CircuitSpec;
-    } catch {
-      return null;
-    }
-  }
-}
+// ─── Orthogonal wire path ─────────────────────────────────────────────────────
 
-// Orthogonal wire routing: go horizontal then vertical.
 function wirePath(x1: number, y1: number, x2: number, y2: number): string {
   const mx = (x1 + x2) / 2;
   return `M${x1},${y1} L${mx},${y1} L${mx},${y2} L${x2},${y2}`;
 }
 
-export function CircuitRenderer({ code }: { code: string }) {
-  const spec = useMemo(() => parseCircuit(code), [code]);
+// ─── Main Component ───────────────────────────────────────────────────────────
 
-  if (!spec) {
+export function CircuitRenderer({ code }: { code: string }) {
+  const layout = useMemo<Layout | null>(() => {
+    const spec = parseCircuit(code);
+    if (!spec) return null;
+    return isNewFormat(spec) ? buildLayout(spec) : buildLegacyLayout(spec);
+  }, [code]);
+
+  if (!layout) {
     return (
       <div className="my-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm font-mono">
         CircuitRenderer: invalid JSON — check syntax.
@@ -180,40 +168,31 @@ export function CircuitRenderer({ code }: { code: string }) {
     );
   }
 
-  const { nodes = [], wires = [], width = 500, height = 300 } = spec;
-
-  // Build node id → position map for wire routing.
-  const nodeMap = new Map<string, CircuitNode>(nodes.map(n => [n.id, n]));
+  const { nodes, wires, svgWidth, svgHeight, title } = layout;
 
   return (
-    <div className="my-4 flex justify-center overflow-x-auto">
+    <div className="my-4 flex flex-col items-center gap-1 overflow-x-auto">
+      {title && <p className="text-sm text-gray-500 italic">{title}</p>}
       <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
+        width={svgWidth}
+        height={svgHeight}
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         className="bg-white border border-gray-200 rounded shadow-sm"
         style={{ color: '#1e293b' }}
       >
-        {/* Wires first (behind components) */}
-        {wires.map((wire, i) => {
-          const a = nodeMap.get(wire.from);
-          const b = nodeMap.get(wire.to);
-          if (!a || !b) return null;
-          return (
-            <path
-              key={i}
-              d={wirePath(a.x, a.y, b.x, b.y)}
-              fill="none"
-              stroke="#1e293b"
-              strokeWidth="2"
-            />
-          );
-        })}
-
-        {/* Components */}
+        {wires.map((w, i) => (
+          <path
+            key={i}
+            d={wirePath(w.x1, w.y1, w.x2, w.y2)}
+            fill="none"
+            stroke="#1e293b"
+            strokeWidth="2"
+          />
+        ))}
         {nodes.map(node => (
-          <g key={node.id} transform={`translate(${node.x},${node.y})`}>
+          <g key={node.id} transform={`translate(${node.cx},${node.cy})`}>
             <ComponentSymbol type={node.type} label={node.label} value={node.value} />
+            <text x="0" y="30" textAnchor="middle" fontSize="9" fill="#64748b">{node.id}</text>
           </g>
         ))}
       </svg>
