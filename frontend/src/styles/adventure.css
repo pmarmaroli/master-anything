@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* Adventure mode theme */
+/* Adventure mode theme - Light mode */
 .adventure-mode {
   font-family: 'Press Start 2P', cursive;
-  background: #0f0f23 !important;
-  background-image: radial-gradient(circle, #1a1a2e 1px, transparent 1px) !important;
+  background: #f0f4ff !important;
+  background-image: radial-gradient(circle, #d8e0f8 1px, transparent 1px) !important;
   background-size: 16px 16px !important;
 }
 
 /* Header in adventure mode */
 .adventure-mode .adventure-header {
-  background: #1a1a2e !important;
-  border-color: #2a2a4a !important;
+  background: #e8eeff !important;
+  border-color: #c0ccee !important;
   border-bottom-width: 3px;
 }
 
@@ -22,46 +22,46 @@
 
 /* Message bubbles */
 .adventure-mode .adventure-bubble-user {
-  background: #1e3a5f !important;
+  background: #ddeeff !important;
   border-color: #0096ff !important;
-  color: #e0e0e0 !important;
+  color: #1a1a2e !important;
   border-radius: 2px !important;
-  box-shadow: 3px 3px 0px #000 !important;
+  box-shadow: 3px 3px 0px #a0b0d0 !important;
   border-width: 2px !important;
 }
 
 .adventure-mode .adventure-bubble-bot {
-  background: #2a1a3e !important;
+  background: #ede0ff !important;
   border-color: #8b5cf6 !important;
-  color: #e0e0e0 !important;
+  color: #1a1a2e !important;
   border-radius: 2px !important;
-  box-shadow: 3px 3px 0px #000 !important;
+  box-shadow: 3px 3px 0px #c0a0e0 !important;
   border-width: 2px !important;
 }
 
 /* Avatar in adventure mode */
 .adventure-mode .adventure-avatar-user {
-  background: #1e3a5f !important;
+  background: #ddeeff !important;
   border-color: #0096ff !important;
   border-radius: 2px !important;
 }
 
 .adventure-mode .adventure-avatar-bot {
-  background: #2a1a3e !important;
+  background: #ede0ff !important;
   border-color: #8b5cf6 !important;
   border-radius: 2px !important;
 }
 
 /* Input area */
 .adventure-mode .adventure-input-area {
-  background: #1a1a2e !important;
-  border-color: #2a2a4a !important;
+  background: #e8eeff !important;
+  border-color: #c0ccee !important;
 }
 
 .adventure-mode .adventure-input {
-  background: #0f0f23 !important;
-  border-color: #2a2a4a !important;
-  color: #e0e0e0 !important;
+  background: #f8f9ff !important;
+  border-color: #c0ccee !important;
+  color: #1a1a2e !important;
   border-radius: 2px !important;
   border-width: 2px !important;
   font-family: 'Press Start 2P', cursive !important;
@@ -69,14 +69,14 @@
 }
 
 .adventure-mode .adventure-input::placeholder {
-  color: #6a6a8a !important;
+  color: #8a8aaa !important;
 }
 
 /* Send button */
 .adventure-mode .adventure-send-btn {
   background: #e94560 !important;
   border-radius: 2px !important;
-  box-shadow: 3px 3px 0px #000 !important;
+  box-shadow: 3px 3px 0px #a03040 !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 9px !important;
 }
@@ -88,17 +88,18 @@
 
 /* Quick reply buttons */
 .adventure-mode .adventure-quick-reply {
-  background: #1a1a2e !important;
+  background: #f0f4ff !important;
   border: 2px solid #e94560 !important;
-  color: #e0e0e0 !important;
+  color: #1a1a2e !important;
   border-radius: 2px !important;
-  box-shadow: 2px 2px 0px #000 !important;
+  box-shadow: 2px 2px 0px #a0b0d0 !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 8px !important;
 }
 
 .adventure-mode .adventure-quick-reply:hover {
   background: #e94560 !important;
+  color: #ffffff !important;
 }
 
 .adventure-mode .adventure-quick-reply:active {
@@ -110,7 +111,7 @@
 .adventure-mode .adventure-toggle {
   background: #e94560 !important;
   border-radius: 2px !important;
-  box-shadow: 2px 2px 0px #000 !important;
+  box-shadow: 2px 2px 0px #a03040 !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 8px !important;
 }
@@ -120,10 +121,10 @@
   width: 8px;
 }
 .adventure-mode ::-webkit-scrollbar-track {
-  background: #0f0f23;
+  background: #e8eeff;
 }
 .adventure-mode ::-webkit-scrollbar-thumb {
-  background: #2a2a4a;
+  background: #c0ccee;
 }
 .adventure-mode ::-webkit-scrollbar-thumb:hover {
   background: #e94560;
@@ -131,24 +132,24 @@
 
 /* Welcome screen in adventure mode */
 .adventure-mode .adventure-welcome h2 {
-  color: #e0e0e0 !important;
+  color: #1a1a2e !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 14px !important;
 }
 
 .adventure-mode .adventure-welcome p {
-  color: #6a6a8a !important;
+  color: #4a4a6a !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 8px !important;
   line-height: 1.8 !important;
 }
 
 .adventure-mode .adventure-welcome button {
-  background: #1a1a2e !important;
-  border: 2px solid #2a2a4a !important;
-  color: #e0e0e0 !important;
+  background: #f0f4ff !important;
+  border: 2px solid #c0ccee !important;
+  color: #1a1a2e !important;
   border-radius: 2px !important;
-  box-shadow: 3px 3px 0px #000 !important;
+  box-shadow: 3px 3px 0px #a0b0d0 !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 8px !important;
 }
@@ -182,44 +183,44 @@
 
 /* Mermaid dungeon map styling */
 .adventure-mode .mermaid-container {
-  background: #0f0f23 !important;
-  border: 2px solid #2a2a4a !important;
+  background: #f0f4ff !important;
+  border: 2px solid #c0ccee !important;
   border-radius: 2px !important;
   padding: 8px !important;
 }
 
 .adventure-mode .mermaid-container svg {
-  background: #0f0f23 !important;
+  background: #f0f4ff !important;
 }
 
 /* Override mermaid node colors for dungeon map look */
 .adventure-mode .mermaid-container .node rect,
 .adventure-mode .mermaid-container .node polygon,
 .adventure-mode .mermaid-container .node circle {
-  fill: #1a1a2e !important;
-  stroke: #ffbd39 !important;
+  fill: #e8eeff !important;
+  stroke: #cc8800 !important;
   stroke-width: 2px !important;
 }
 
 .adventure-mode .mermaid-container .node .label {
-  color: #e0e0e0 !important;
-  fill: #e0e0e0 !important;
+  color: #1a1a2e !important;
+  fill: #1a1a2e !important;
 }
 
 .adventure-mode .mermaid-container .edgePath path {
-  stroke: #2a2a4a !important;
+  stroke: #8090c0 !important;
   stroke-dasharray: 5 3 !important;
   stroke-width: 2px !important;
 }
 
 .adventure-mode .mermaid-container .edgeLabel {
-  color: #6a6a8a !important;
-  fill: #6a6a8a !important;
-  background: #0f0f23 !important;
+  color: #4a4a6a !important;
+  fill: #4a4a6a !important;
+  background: #f0f4ff !important;
 }
 
 .adventure-mode .mermaid-container text {
-  fill: #e0e0e0 !important;
+  fill: #1a1a2e !important;
   font-family: 'Press Start 2P', cursive !important;
   font-size: 9px !important;
 }
