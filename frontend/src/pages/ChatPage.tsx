@@ -45,7 +45,6 @@ export function ChatPage() {
     }
     const prev = prevProgressRef.current;
     if (prev) {
-      // Detect newly mastered concepts by comparing scores
       const prevScores = prev.conceptScores;
       const currScores = progress.conceptScores;
       for (const concept of Object.keys(currScores)) {
@@ -55,14 +54,11 @@ export function ChatPage() {
           const latestReward = progress.inventory.length > 0
             ? progress.inventory[progress.inventory.length - 1]
             : null;
-          // Defer state updates to avoid synchronous setState in effect body
-          setTimeout(() => {
-            setMasteryBadgeConcept(concept);
-            setMasteryBadgeReward(latestReward);
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 1800);
-            setStreak(s => s + 1);
-          }, 0);
+          setMasteryBadgeConcept(concept);
+          setMasteryBadgeReward(latestReward);
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 1800);
+          setStreak(s => s + 1);
           break;
         }
       }
@@ -73,7 +69,7 @@ export function ChatPage() {
         progress.currentStep === 'B1' &&
         progress.currentPhase === 'learning_loop'
       ) {
-        setTimeout(() => setStreak(0), 0);
+        setStreak(0);
       }
     }
     prevProgressRef.current = progress;

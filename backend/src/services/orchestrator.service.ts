@@ -881,7 +881,7 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
     return base;
   }
 
-  getEngagementTip(step: string, concept: string): string {
+  static getEngagementTip(step: string, concept: string): string {
     const tips: Record<string, string> = {
       'A1': '🎯 Goal: Choose a topic to master',
       'A2': '🔍 Goal: Show what you already know',
@@ -920,7 +920,7 @@ Same rendering logic as Study Mode, but with pixel-art aesthetic:
       inventory: session.inventory || [],
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
-      engagementTip: this.getEngagementTip(session.currentStep, currentConcept),
+      engagementTip: OrchestratorService.getEngagementTip(session.currentStep, currentConcept),
     };
   }
 }

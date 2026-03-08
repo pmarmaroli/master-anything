@@ -7,7 +7,6 @@ import { MasteryProgress } from '../types';
 const router = Router();
 const sessionService = new SessionService();
 const spacedRepetitionService = new SpacedRepetitionService();
-const orchestratorService = new OrchestratorService();
 
 router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
   try {
@@ -38,7 +37,7 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
       inventory: session.inventory || [],
       reviewsDue: dueReviews.length,
       knowledgeGraph: session.topicMap.knowledgeGraph,
-      engagementTip: orchestratorService.getEngagementTip(
+      engagementTip: OrchestratorService.getEngagementTip(
         session.currentStep,
         session.topicMap.concepts[session.conceptIndex] || ''
       ),
