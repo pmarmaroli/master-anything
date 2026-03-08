@@ -70,9 +70,11 @@ function SpeakButton({ text, language }: { text: string; language?: string | nul
 function extractQuickReplies(content: string, language?: string | null): string[] {
   const abcMatch = content.match(/(?:^|\n)\s*\**[A-Da-d1-4][)\.]\**\s*(.+)/g);
   if (abcMatch && abcMatch.length >= 2) {
-    return abcMatch.map(m =>
-      m.replace(/^\s*\**[A-Da-d1-4][)\.]\**\s*/, '').replace(/\*\*/g, '').trim()
-    ).filter(Boolean);
+    const letters = abcMatch
+      .map(m => { const lm = m.match(/[A-Da-d]/); return lm ? lm[0].toUpperCase() : null; })
+      .filter(Boolean) as string[];
+    const idk = language === 'fr' ? 'Je ne sais pas' : "I don't know";
+    return [...letters, idk];
   }
 
   const questions = content.match(/[^.!?\n]+\?/g);
