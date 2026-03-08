@@ -259,13 +259,29 @@ THIS IS THE MOST IMPORTANT RULE. VIOLATING IT BREAKS THE GAME.`;
     // Wrap message for evaluator to force JSON scoring
     const agentMessage = this.prepareMessage(selectedAgent, message, session);
 
-    let response = await this.agentService.sendMessageStreaming(
-      session.threadId,
-      selectedAgent,
-      agentMessage,
-      systemPrompt,
-      onToken
-    );
+    // Evaluator returns a JSON scoring block — never stream it raw to the user.
+    // Capture without streaming, parse, then emit only the feedback text.
+    let response: string;
+    if (selectedAgent === 'evaluator') {
+      response = await this.agentService.sendMessage(
+        session.threadId,
+        selectedAgent,
+        agentMessage,
+        systemPrompt
+      );
+      const parsed = this.masteryService.parseEvaluatorResponse(response);
+      if (parsed?.feedback) {
+        onToken(parsed.feedback);
+      }
+    } else {
+      response = await this.agentService.sendMessageStreaming(
+        session.threadId,
+        selectedAgent,
+        agentMessage,
+        systemPrompt,
+        onToken
+      );
+    }
 
     // 2-step rendering: call Renderer for visual enhancement (streamed)
     if (this.shouldCallRenderer(selectedAgent, response)) {
